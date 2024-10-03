@@ -69,7 +69,8 @@ impl SlashArgument for TimestampFormat {
 	track_edits,
 	slash_command,
 	install_context = "User",
-	interaction_context = "Guild|BotDm|PrivateChannel"
+	interaction_context = "Guild|BotDm|PrivateChannel",
+	ephemeral
 )]
 pub async fn timestamp(
 	ctx: Context<'_>,
