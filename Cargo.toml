@@ -1,0 +1,24 @@
+[package]
+name = "not_kyza_discord"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dotenvy = { git = "https://github.com/allan2/dotenvy", rev = "db0d6aa", features = [
+   "macros",
+] }
+log = "0.4.22"
+maplit = "1.0.2"
+poise = { git = "https://github.com/fgardt/poise", rev = "a8a987d", features = [
+   "unstable",
+] }
+reqwest = { version = "0.12.8", features = ["json"] }
+serde = "1.0.210"
+serde_json = "1.0.128"
+serde_plain = "1.0.2"
+tokio = { version = "1.40.0", features = ["rt-multi-thread"] }
+url = "2.5.2"
+anyhow = "1.0.89"
+async-trait = "0.1.83"
+byte-unit = "5.1.4"
+dateparser = "0.2.1"
