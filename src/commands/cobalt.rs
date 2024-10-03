@@ -200,7 +200,14 @@ pub async fn cobalt(
 						CreateButton::new_link(response.url.clone().unwrap())
 							.label("Download"),
 					])])
-					.content(format!("<{}>", url.to_string()));
+					.content(format!(
+						"[{}](<{}>)",
+						response
+							.filename
+							.clone()
+							.expect("There was no filename."),
+						url.to_string()
+					));
 				let sent_response = ctx.send(reply).await;
 
 				if let Err(e) = sent_response {
@@ -212,7 +219,12 @@ pub async fn cobalt(
 								.label("Download"),
 						])])
 						.content(format!(
-							"Something went wrong.```json\n{}\n```File size: `{:#}`",
+							"[{}](<{}>)\n```json\n{}\n```File size: `{:#}`",
+							response
+								.filename
+								.clone()
+								.expect("There was no filename."),
+							url.to_string(),
 							e,
 							Byte::from_u64(content_length)
 						));
