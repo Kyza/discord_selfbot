@@ -201,12 +201,12 @@ pub async fn cobalt(
 							.label("Download"),
 					])])
 					.content(format!(
-						"[{}](<{}>)",
+						"<{}>\n-# {}",
+						url.to_string(),
 						response
 							.filename
 							.clone()
 							.expect("There was no filename."),
-						url.to_string()
 					));
 				let sent_response = ctx.send(reply).await;
 
@@ -219,12 +219,12 @@ pub async fn cobalt(
 								.label("Download"),
 						])])
 						.content(format!(
-							"[{}](<{}>)\n```json\n{}\n```File size: `{:#}`",
+							"<{}>\n-# {}\n```json\n{}\n```File size: `{:#}`",
+							url.to_string(),
 							response
 								.filename
 								.clone()
 								.expect("There was no filename."),
-							url.to_string(),
 							e,
 							Byte::from_u64(content_length)
 						));
