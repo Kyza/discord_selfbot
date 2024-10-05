@@ -1,5 +1,6 @@
-use anyhow::Error;
+use anyhow::{anyhow, Error, Result};
 use poise::serenity_prelude as serenity;
+use reqwest::header;
 
 use crate::types::{Context, Data};
 
@@ -161,4 +162,28 @@ pub async fn reply_potentially_long_text(
 	ctx.say(trim_text(text_body, text_end, truncation_msg_future).await)
 		.await?;
 	Ok(())
+}
+
+pub async fn is_file_larger_than_mb(
+	url: &str,
+	max_size_mb: u64,
+) -> Result<(bool, u64)> {
+	let client = reqwest::Client::new();
+	let response = client.head(url).send().await?;
+
+	println!("{:#?}", response.headers());
+
+	if let Some(content_length) =
+		response.headers().get(header::CONTENT_LENGTH)
+	{
+		if let Ok(size) =
+			content_length.to_str().unwrap_or("0").parse::<u64>()
+		{
+			Ok((size > max_size_mb * 1024 * 1024, size))
+		} else {
+			Err(anyhow!("Could not parse content-length header"))
+		}
+	} else {
+		Err(anyhow!("Content-Length header not found"))
+	}
 }

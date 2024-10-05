@@ -2,7 +2,6 @@ use anyhow::Result;
 use poise::{
 	serenity_prelude::{
 		self as serenity, async_trait, CreateAllowedMentions,
-		CreateAttachment, Mentionable,
 	},
 	CreateReply, SlashArgError, SlashArgument,
 };

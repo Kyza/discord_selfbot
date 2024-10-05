@@ -1,8 +1,7 @@
 use anyhow::Result;
 use poise::{
 	serenity_prelude::{
-		self as serenity, CreateAllowedMentions, CreateAttachment,
-		Mentionable,
+		self as serenity, CreateAllowedMentions, Mentionable,
 	},
 	CreateReply,
 };

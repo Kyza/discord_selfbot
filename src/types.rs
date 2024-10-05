@@ -1,6 +1,6 @@
-use anyhow::{anyhow, Error, Result};
+use anyhow::Error;
 use poise::serenity_prelude as serenity;
-use std::{env, sync::Arc};
+use std::env;
 
 #[derive(Debug)]
 pub struct Data {
@@ -30,4 +30,4 @@ impl Data {
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 
 // const EMBED_COLOR: (u8, u8, u8) = (0xf7, 0x4c, 0x00);
-pub const EMBED_COLOR: (u8, u8, u8) = (0x00, 0x01, 0x00); // slightly less saturated
+pub const EMBED_COLOR: (u8, u8, u8) = (0x7b, 0xbe, 0x17);

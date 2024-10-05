@@ -1,8 +1,5 @@
-use std::sync::LazyLock;
-
-use anyhow::{anyhow, Error};
+use anyhow::Error;
 use poise::serenity_prelude as serenity;
-use poise::serenity_prelude::Timestamp;
 
 use crate::types::Context;
 

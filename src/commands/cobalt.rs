@@ -1,23 +1,16 @@
 use anyhow::Result;
-use byte_unit::{Byte, Unit};
-use num_format::ToFormattedString;
+use byte_unit::Byte;
 use poise::{
 	serenity_prelude::{
-		self as serenity, async_trait, CommandInteraction, CreateActionRow,
-		CreateAllowedMentions, CreateAttachment, CreateButton, CreateEmbed,
-		Mentionable, ResolvedValue,
+		self as serenity, async_trait, CreateActionRow,
+		CreateAllowedMentions, CreateAttachment, CreateButton,
 	},
-	CommandParameterChoice, CreateReply, SlashArgError, SlashArgument,
-	SlashArgumentHack,
+	CreateReply, SlashArgError, SlashArgument,
 };
 use reqwest::header;
-use serde::{Deserialize, Deserializer, Serialize};
-use std::{
-	fs::File, future::Future, io::Write, os::windows::io::AsHandle, pin::Pin,
-	str::FromStr,
-};
+use serde::{Deserialize, Serialize};
 
-use crate::types::Context;
+use crate::{helpers::is_file_larger_than_mb, types::Context};
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -135,7 +128,7 @@ pub async fn cobalt(
 	let result = ctx
 		.data()
 		.http
-		.post("https://api.cobalt.tools/")
+		.post("https://nyc1.coapi.ggtyler.dev/")
 		.header(header::ACCEPT, "application/json")
 		.header(header::CONTENT_TYPE, "application/json")
 		.json(&CobaltRequest {
@@ -154,10 +147,7 @@ pub async fn cobalt(
 			CobaltStatus::Error => {
 				let reply = CreateReply::default()
 					.allowed_mentions(CreateAllowedMentions::default())
-					.content(format!(
-						"{:?} `{:?}`",
-						response.status, response.filename
-					));
+					.content(format!("```\n{:#?}\n```", response));
 				ctx.send(reply).await?;
 			}
 			CobaltStatus::Picker => {
@@ -184,6 +174,28 @@ pub async fn cobalt(
 
 				let content = res.bytes().await?;
 				let content_length = content.len() as u64;
+
+				// If the file is larger than 8MB, send a warning.
+				let is_too_large = content_length > 8 * 1024 * 1024;
+				if is_too_large {
+					let reply = CreateReply::default()
+						.allowed_mentions(CreateAllowedMentions::default())
+						.components(vec![CreateActionRow::Buttons(vec![
+							CreateButton::new_link(response.url.unwrap())
+								.label("Download"),
+						])])
+						.content(format!(
+							"<{}>\n-# {}\nFile size: `{:#}`",
+							url.to_string(),
+							response
+								.filename
+								.clone()
+								.expect("There was no filename."),
+							Byte::from_u64(content_length)
+						));
+					ctx.send(reply).await?;
+					return Ok(());
+				}
 
 				println!("File size: {:#}", Byte::from_u64(content_length));
 

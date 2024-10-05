@@ -1,10 +1,5 @@
 use anyhow::Result;
-use poise::{
-	serenity_prelude::{
-		self as serenity, CreateAllowedMentions, Mentionable,
-	},
-	CreateReply,
-};
+use poise::{serenity_prelude::CreateAllowedMentions, CreateReply};
 
 use crate::types::Context;
 
