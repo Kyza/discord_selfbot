@@ -62,7 +62,8 @@ pub async fn wolfram(
 			if let Some(plaintext) = subpod["plaintext"].as_str() {
 				if !plaintext.is_empty() {
 					has_plaintext = true;
-					pod_content.push_str(&format!("```\n{}\n```", plaintext));
+					pod_content
+						.push_str(&format!("```rs\n{}\n```", plaintext));
 				}
 			}
 
