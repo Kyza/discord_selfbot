@@ -9,12 +9,16 @@ use crate::types::Context;
 	track_edits,
 	slash_command,
 	install_context = "User",
-	interaction_context = "Guild|BotDm|PrivateChannel"
+	interaction_context = "Guild|BotDm|PrivateChannel",
+	ephemeral
 )]
 pub async fn github(
 	ctx: Context<'_>,
 	#[description = "GitHub user."] user: String,
 	#[description = "GitHub repository name."] repository: String,
+	#[description = "Whether or not to show the message."] ephemeral: Option<
+		bool,
+	>,
 ) -> Result<()> {
 	let response = format!(
 		"[{user}/{repository}](https://github.com/{user}/{repository})",
@@ -22,7 +26,8 @@ pub async fn github(
 
 	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
-		.content(response);
+		.content(response)
+		.ephemeral(ephemeral.unwrap_or(false));
 
 	ctx.send(reply).await?;
 	Ok(())

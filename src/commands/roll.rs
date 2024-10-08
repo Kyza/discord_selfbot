@@ -63,7 +63,7 @@ pub async fn roll(
 
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
-		.ephemeral(ephemeral.unwrap_or(true));
+		.ephemeral(ephemeral.unwrap_or(false));
 
 	reply = if text_markdown.len() > 2000 {
 		let text_plain = format_roll(&roll_result, false);

@@ -48,7 +48,7 @@ pub async fn wayback(
 	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.content(response)
-		.ephemeral(ephemeral.unwrap_or(true));
+		.ephemeral(ephemeral.unwrap_or(false));
 
 	ctx.send(reply).await?;
 	Ok(())

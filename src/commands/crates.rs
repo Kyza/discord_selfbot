@@ -115,13 +115,17 @@ async fn autocomplete_crate(
 	interaction_context = "Guild|BotDm|PrivateChannel",
 	rename = "crate",
 	broadcast_typing,
-	category = "Crates"
+	category = "Crates",
+	ephemeral
 )]
 pub async fn crate_(
 	ctx: Context<'_>,
 	#[description = "Name of the searched crate"]
 	#[autocomplete = "autocomplete_crate"]
 	crate_name: String,
+	#[description = "Whether or not to show the message."] ephemeral: Option<
+		bool,
+	>,
 ) -> Result<()> {
 	if let Some(url) = rustc_crate_link(&crate_name) {
 		ctx.say(url).await?;
@@ -131,33 +135,35 @@ pub async fn crate_(
 	let crate_ = get_crate(&ctx.data().http, &crate_name).await?;
 
 	ctx.send(
-		poise::CreateReply::default().embed(
-			serenity::CreateEmbed::new()
-				.title(&crate_.name)
-				.url(get_documentation(&crate_))
-				.description(
-					crate_
-						.description
-						.as_deref()
-						.unwrap_or("_<no description available>_"),
-				)
-				.field(
-					"Version",
-					crate_
-						.max_stable_version
-						.or(crate_.max_version)
-						.unwrap_or_else(|| "<unknown version>".into()),
-					true,
-				)
-				.field("Downloads", format_number(crate_.downloads), true)
-				.timestamp(
-					crate_
-						.updated_at
-						.parse::<serenity::Timestamp>()
-						.unwrap_or(serenity::Timestamp::now()),
-				)
-				.color(crate::types::EMBED_COLOR),
-		),
+		poise::CreateReply::default()
+			.embed(
+				serenity::CreateEmbed::new()
+					.title(&crate_.name)
+					.url(get_documentation(&crate_))
+					.description(
+						crate_
+							.description
+							.as_deref()
+							.unwrap_or("_<no description available>_"),
+					)
+					.field(
+						"Version",
+						crate_
+							.max_stable_version
+							.or(crate_.max_version)
+							.unwrap_or_else(|| "<unknown version>".into()),
+						true,
+					)
+					.field("Downloads", format_number(crate_.downloads), true)
+					.timestamp(
+						crate_
+							.updated_at
+							.parse::<serenity::Timestamp>()
+							.unwrap_or(serenity::Timestamp::now()),
+					)
+					.color(crate::types::EMBED_COLOR),
+			)
+			.ephemeral(ephemeral.unwrap_or(false)),
 	)
 	.await?;
 

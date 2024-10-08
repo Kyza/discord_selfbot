@@ -28,7 +28,8 @@ use crate::types::Context;
 	track_edits,
 	install_context = "User",
 	interaction_context = "Guild|BotDm|PrivateChannel",
-	category = "Utilities"
+	category = "Utilities",
+	ephemeral
 )]
 pub async fn help(
 	ctx: Context<'_>,

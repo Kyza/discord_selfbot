@@ -14,11 +14,15 @@ use crate::types::Context;
 	track_edits,
 	slash_command,
 	install_context = "User",
-	interaction_context = "Guild|BotDm|PrivateChannel"
+	interaction_context = "Guild|BotDm|PrivateChannel",
+	ephemeral
 )]
 pub async fn age(
 	ctx: Context<'_>,
 	#[description = "Selected user."] user: Option<serenity::User>,
+	#[description = "Whether or not to show the message."] ephemeral: Option<
+		bool,
+	>,
 ) -> Result<()> {
 	let u = user.as_ref().unwrap_or_else(|| ctx.author());
 	let response = format!(
@@ -29,7 +33,8 @@ pub async fn age(
 
 	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
-		.content(response);
+		.content(response)
+		.ephemeral(ephemeral.unwrap_or(false));
 
 	ctx.send(reply).await?;
 	Ok(())

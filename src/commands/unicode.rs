@@ -48,7 +48,7 @@ pub async fn unicode(
 	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.content(format!("```\n{}\n```", text))
-		.ephemeral(ephemeral.unwrap_or(true));
+		.ephemeral(ephemeral.unwrap_or(false));
 
 	ctx.send(reply).await?;
 	Ok(())

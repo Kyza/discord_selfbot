@@ -117,16 +117,24 @@ pub struct CobaltErrorContext {
 	owners_only,
 	track_edits,
 	install_context = "User",
-	interaction_context = "Guild|BotDm|PrivateChannel"
+	interaction_context = "Guild|BotDm|PrivateChannel",
+	ephemeral
 )]
 pub async fn cobalt(
 	ctx: Context<'_>,
 	#[description = "Media URL."] url: url::Url,
-	#[description = "Video quality. Default 720p."]
+	#[description = "Video resolution. Default 720p."]
 	#[lazy]
-	quality: Option<CobaltVideoQuality>,
+	resolution: Option<CobaltVideoQuality>,
+	#[description = "Whether or not to show the message."] ephemeral: Option<
+		bool,
+	>,
 ) -> Result<()> {
 	ctx.defer().await?;
+
+	let mut reply = CreateReply::default()
+		.allowed_mentions(CreateAllowedMentions::default())
+		.ephemeral(ephemeral.unwrap_or(false));
 
 	let result = ctx
 		.data()
@@ -138,7 +146,8 @@ pub async fn cobalt(
 			url: url.to_string(),
 			always_proxy: true,
 			filename_style: "nerdy".to_string(),
-			video_quality: quality.unwrap_or(CobaltVideoQuality::Quality720),
+			video_quality: resolution
+				.unwrap_or(CobaltVideoQuality::Quality720),
 			twitter_gif: true,
 		})
 		.send()
@@ -149,17 +158,13 @@ pub async fn cobalt(
 	if let Ok(response) = serde_json::from_str::<CobaltResponse>(&result) {
 		match response.status {
 			CobaltStatus::Error => {
-				let reply = CreateReply::default()
-					.allowed_mentions(CreateAllowedMentions::default())
-					.content(format!("```\n{:#?}\n```", response));
+				reply = reply.content(format!("```\n{:#?}\n```", response));
 				ctx.send(reply).await?;
 			}
 			CobaltStatus::Picker => {
-				let reply = CreateReply::default()
-					.allowed_mentions(CreateAllowedMentions::default())
-					.content(
-						"Picker was reached and I haven't made that yet.",
-					);
+				reply = reply.content(
+					"Picker was reached and I haven't made that yet.",
+				);
 				ctx.send(reply).await?;
 			}
 			CobaltStatus::Redirect | CobaltStatus::Tunnel => {
@@ -229,8 +234,7 @@ pub async fn cobalt(
 
 				// If the file is larger than 8MB, send a warning.
 				if is_too_large(compressed_file_size) {
-					let reply = CreateReply::default()
-						.allowed_mentions(CreateAllowedMentions::default())
+					reply = reply
 						.components(vec![CreateActionRow::Buttons(vec![
 							CreateButton::new_link(response.url.unwrap())
 								.label("Download"),
@@ -249,8 +253,7 @@ pub async fn cobalt(
 				let compressed_file_content =
 					std::fs::read(compressed_file.path())?;
 
-				let reply = CreateReply::default()
-					.allowed_mentions(CreateAllowedMentions::default())
+				reply = reply
 					.attachment(CreateAttachment::bytes(
 						compressed_file_content,
 						upload_file_name,
@@ -264,12 +267,11 @@ pub async fn cobalt(
 						url.to_string(),
 						upload_file_name,
 					));
-				let sent_response = ctx.send(reply).await;
+				let sent_response = ctx.send(reply.clone()).await;
 
 				if let Err(e) = sent_response {
 					println!("Error sending message: {}", e);
-					let reply = CreateReply::default()
-						.allowed_mentions(CreateAllowedMentions::default())
+					reply = reply
 						.components(vec![CreateActionRow::Buttons(vec![
 							CreateButton::new_link(response.url.unwrap())
 								.label("Download"),
@@ -288,12 +290,10 @@ pub async fn cobalt(
 			}
 		}
 	} else {
-		let reply = CreateReply::default()
-			.allowed_mentions(CreateAllowedMentions::default())
-			.content(format!(
-				"Something went wrong.```json\n{}\n```",
-				result
-			));
+		reply = reply.content(format!(
+			"Something went wrong.```json\n{}\n```",
+			result
+		));
 		ctx.send(reply).await?;
 	}
 	Ok(())

@@ -82,59 +82,56 @@ pub async fn snowstamp(
 		bool,
 	>,
 ) -> Result<()> {
-	if id.is_none() && timestamp.is_none() {
-		let reply = CreateReply::default()
-			.allowed_mentions(CreateAllowedMentions::default())
-			.content("You must specify either a Discord snowflake ID or a timestamp.")
-			.ephemeral(true);
-		ctx.send(reply).await?;
-		return Ok(());
-	}
-
-	if id.is_some() && timestamp.is_some() {
-		let reply = CreateReply::default()
-			.allowed_mentions(CreateAllowedMentions::default())
-			.content("You cannot specify both a Discord snowflake ID and a timestamp.")
-			.ephemeral(true);
-		ctx.send(reply).await?;
-		return Ok(());
-	}
-
 	let format_letter = serde_plain::to_string::<TimestampFormat>(
 		&format.unwrap_or(TimestampFormat::ShortDateTime),
 	)?;
 
-	if let Some(id) = id {
-		let response = format!(
-			"<t:{}:{}>",
-			serenity::UserId::new(id.parse::<u64>()?)
-				.created_at()
-				.timestamp(),
-			format_letter
-		);
+	let mut reply = CreateReply::default()
+		.allowed_mentions(CreateAllowedMentions::default())
+		.ephemeral(ephemeral.unwrap_or(false));
 
-		let reply = CreateReply::default()
-			.allowed_mentions(CreateAllowedMentions::default())
-			.content(response)
-			.ephemeral(ephemeral.unwrap_or(true));
+	match (id, timestamp) {
+		(Some(id), None) => {
+			let response = format!(
+				"<t:{}:{}>",
+				serenity::UserId::new(id.parse::<u64>()?)
+					.created_at()
+					.timestamp(),
+				format_letter
+			);
 
-		ctx.send(reply).await?;
+			reply = reply.content(response);
+
+			ctx.send(reply).await?;
+			Ok(())
+		}
+		(None, Some(timestamp)) => {
+			let response = format!(
+				"<t:{}:{}>",
+				dateparser::parse(&timestamp)?.timestamp(),
+				format_letter
+			);
+
+			reply = reply.content(response);
+
+			ctx.send(reply).await?;
+			Ok(())
+		}
+		(Some(_), Some(_)) => {
+			let reply = CreateReply::default()
+				.allowed_mentions(CreateAllowedMentions::default())
+				.content("You cannot specify both a Discord snowflake ID and a timestamp.")
+				.ephemeral(true);
+			ctx.send(reply).await?;
+			Ok(())
+		}
+		(None, None) => {
+			let reply = CreateReply::default()
+				.allowed_mentions(CreateAllowedMentions::default())
+				.content("You must specify either a Discord snowflake ID or a timestamp.")
+				.ephemeral(true);
+			ctx.send(reply).await?;
+			Ok(())
+		}
 	}
-
-	if let Some(timestamp) = timestamp {
-		let response = format!(
-			"<t:{}:{}>",
-			dateparser::parse(&timestamp)?.timestamp(),
-			format_letter
-		);
-
-		let reply = CreateReply::default()
-			.allowed_mentions(CreateAllowedMentions::default())
-			.content(response)
-			.ephemeral(ephemeral.unwrap_or(true));
-
-		ctx.send(reply).await?;
-	}
-
-	Ok(())
 }
