@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use anyhow::{anyhow, Error, Result};
 use poise::serenity_prelude as serenity;
 use reqwest::header;
@@ -186,4 +188,30 @@ pub async fn is_file_larger_than_mb(
 	} else {
 		Err(anyhow!("Content-Length header not found"))
 	}
+}
+
+pub fn change_extension<P: AsRef<Path>>(path: P, new_ext: &str) -> PathBuf {
+	let mut new_path = path.as_ref().to_path_buf();
+
+	// Remove the current extension (if any)
+	new_path.set_extension(new_ext);
+
+	new_path
+}
+
+pub fn escape_markdown(text: &str) -> String {
+	let mut escaped = String::new();
+	for c in text.chars() {
+		// args.text.replace(/(`|\*|_|>|<)/g, "\\$1")
+		match c {
+			'`' => escaped.push_str("\\`"),
+			'*' => escaped.push_str("\\*"),
+			'_' => escaped.push_str("\\_"),
+			'<' => escaped.push_str("\\<"),
+			'>' => escaped.push_str("\\>"),
+			'\\' => escaped.push_str("\\\\"),
+			_ => escaped.push(c),
+		}
+	}
+	escaped
 }

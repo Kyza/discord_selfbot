@@ -1,3 +1,5 @@
+use std::{io::Write, os::windows::fs::MetadataExt};
+
 use anyhow::Result;
 use byte_unit::Byte;
 use poise::{
@@ -10,7 +12,7 @@ use poise::{
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 
-use crate::{helpers::is_file_larger_than_mb, types::Context};
+use crate::{helpers::change_extension, media, types::Context};
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -19,6 +21,7 @@ pub struct CobaltRequest {
 	always_proxy: bool,
 	filename_style: String,
 	video_quality: CobaltVideoQuality,
+	twitter_gif: bool,
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum CobaltVideoQuality {
@@ -90,22 +93,22 @@ pub enum CobaltStatus {
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CobaltResponse {
-	status: CobaltStatus,
+	pub status: CobaltStatus,
 	// Error
-	error: Option<CobaltError>,
+	pub error: Option<CobaltError>,
 	// Tunnel / Redirect
-	url: Option<String>,
-	filename: Option<String>,
+	pub url: Option<String>,
+	pub filename: Option<String>,
 }
 #[derive(Debug, Deserialize, Clone)]
 pub struct CobaltError {
-	code: String,
-	context: Option<CobaltErrorContext>,
+	pub code: String,
+	pub context: Option<CobaltErrorContext>,
 }
 #[derive(Debug, Deserialize, Clone)]
 pub struct CobaltErrorContext {
-	service: String,
-	limit: i32,
+	pub service: String,
+	pub limit: i32,
 }
 
 /// Downloads a media file from a URL and sends it.
@@ -136,6 +139,7 @@ pub async fn cobalt(
 			always_proxy: true,
 			filename_style: "nerdy".to_string(),
 			video_quality: quality.unwrap_or(CobaltVideoQuality::Quality720),
+			twitter_gif: true,
 		})
 		.send()
 		.await?
@@ -175,9 +179,56 @@ pub async fn cobalt(
 				let content = res.bytes().await?;
 				let content_length = content.len() as u64;
 
+				let downloaded_file_name = response
+					.filename
+					.clone()
+					.expect("There was no filename.");
+
+				let is_too_large = |size| size > 8 * 1024 * 1024;
+
+				println!(
+					"File name before: {}",
+					downloaded_file_name.clone()
+				);
+				println!(
+					"File size before: {:#}",
+					Byte::from_u64(content_length)
+				);
+
+				// Save the file.
+				// Not tempfile.
+				let mut file = tempfile::NamedTempFile::new()?;
+				file.write_all(&content)?;
+				// std::fs::copy(file.path(), downloaded_file_name.clone())?;
+				// Compress the file.
+				let (compressed_file, extension) = media::convert_file(
+					file.path(),
+					is_too_large(content_length),
+				)?;
+				let upload_file_name = &change_extension(
+					downloaded_file_name.clone(),
+					&extension,
+				)
+				.to_string_lossy()
+				.to_string();
+				// Save to current directory.
+				// std::fs::copy(
+				// 	compressed_file.path(),
+				// 	upload_file_name.clone(),
+				// )?;
+
+				let compressed_file_size =
+					compressed_file.as_file().metadata()?.file_size();
+
+				println!("File name after: {}", upload_file_name);
+
+				println!(
+					"File size after: {:#}",
+					Byte::from_u64(compressed_file_size)
+				);
+
 				// If the file is larger than 8MB, send a warning.
-				let is_too_large = content_length > 8 * 1024 * 1024;
-				if is_too_large {
+				if is_too_large(compressed_file_size) {
 					let reply = CreateReply::default()
 						.allowed_mentions(CreateAllowedMentions::default())
 						.components(vec![CreateActionRow::Buttons(vec![
@@ -187,26 +238,22 @@ pub async fn cobalt(
 						.content(format!(
 							"<{}>\n-# {}\nFile size: `{:#}`",
 							url.to_string(),
-							response
-								.filename
-								.clone()
-								.expect("There was no filename."),
-							Byte::from_u64(content_length)
+							upload_file_name,
+							Byte::from_u64(compressed_file_size)
 						));
 					ctx.send(reply).await?;
 					return Ok(());
 				}
 
-				println!("File size: {:#}", Byte::from_u64(content_length));
+				// Read the file contents.
+				let compressed_file_content =
+					std::fs::read(compressed_file.path())?;
 
 				let reply = CreateReply::default()
 					.allowed_mentions(CreateAllowedMentions::default())
 					.attachment(CreateAttachment::bytes(
-						content,
-						response
-							.filename
-							.clone()
-							.expect("There was no filename."),
+						compressed_file_content,
+						upload_file_name,
 					))
 					.components(vec![CreateActionRow::Buttons(vec![
 						CreateButton::new_link(response.url.clone().unwrap())
@@ -215,10 +262,7 @@ pub async fn cobalt(
 					.content(format!(
 						"<{}>\n-# {}",
 						url.to_string(),
-						response
-							.filename
-							.clone()
-							.expect("There was no filename."),
+						upload_file_name,
 					));
 				let sent_response = ctx.send(reply).await;
 
@@ -233,14 +277,13 @@ pub async fn cobalt(
 						.content(format!(
 							"<{}>\n-# {}\n```json\n{}\n```File size: `{:#}`",
 							url.to_string(),
-							response
-								.filename
-								.clone()
-								.expect("There was no filename."),
+							upload_file_name,
 							e,
 							Byte::from_u64(content_length)
 						));
 					ctx.send(reply).await?;
+
+					drop(compressed_file);
 				}
 			}
 		}

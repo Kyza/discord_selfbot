@@ -10,4 +10,7 @@ macro_rules! slash_commands {
 	};
 }
 
-slash_commands![age, github, cobalt, crates, utilities, timestamp];
+slash_commands![
+	age, github, cobalt, crates, utilities, snowstamp, wolfram, wayback,
+	unicode, escape, roll
+];

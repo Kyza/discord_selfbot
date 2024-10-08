@@ -8,6 +8,7 @@ use types::Data;
 
 pub mod commands;
 pub mod helpers;
+pub mod media;
 pub mod types;
 
 #[dotenvy::load]
@@ -28,7 +29,12 @@ async fn main() {
 				commands::cleanup(),
 				commands::uptime(),
 				commands::help(),
-				commands::timestamp(),
+				commands::snowstamp(),
+				commands::wolfram(),
+				commands::wayback(),
+				commands::unicode(),
+				commands::escape(),
+				commands::roll(),
 			],
 			..Default::default()
 		})

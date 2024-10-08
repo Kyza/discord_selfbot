@@ -7,6 +7,8 @@ pub struct Data {
 	pub application_id: serenity::UserId,
 	pub bot_start_time: std::time::Instant,
 	pub http: reqwest::Client,
+	pub wolfram_alpha_simple_app_id: String,
+	pub wolfram_alpha_short_app_id: String,
 	// pub godbolt_metadata:
 	// 	std::sync::Mutex<commands::godbolt::GodboltMetadata>,
 }
@@ -20,6 +22,14 @@ impl Data {
 				.expect("APPLICATION_ID is not a valid ID"),
 			bot_start_time: std::time::Instant::now(),
 			http: reqwest::Client::new(),
+			wolfram_alpha_simple_app_id: env::var(
+				"WOLFRAM_ALPHA_SIMPLE_APP_ID",
+			)
+			.expect("WOLFRAM_ALPHA_SIMPLE_APP_ID is required"),
+			wolfram_alpha_short_app_id: env::var(
+				"WOLFRAM_ALPHA_SHORT_APP_ID",
+			)
+			.expect("WOLFRAM_ALPHA_SHORT_APP_ID is required"),
 			// godbolt_metadata: std::sync::Mutex::new(
 			// 	commands::godbolt::GodboltMetadata::default(),
 			// ),
