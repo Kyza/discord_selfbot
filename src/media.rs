@@ -108,8 +108,12 @@ fn convert_video(input: &Path) -> Result<NamedTempFile> {
 		video_info.video_bitrate,
 		video_info.audio_bitrate,
 		video_info.duration,
-		8 * 8 * 1024 * 1024,
+		(7.5 * 8.0 * 1024.0 * 1024.0) as u64,
 	);
+	if new_bitrate < video_info.video_bitrate {
+		println!("Reducing FPS to 30.");
+		ffmpeg_command.args(&["-vf", &format!("fps={}", 30)]);
+	}
 
 	let new_bitrate = format!("{}k", new_bitrate / 1024);
 
