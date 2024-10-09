@@ -423,18 +423,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
 
 [[package]]
-name = "dateparser"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2ef451feee09ae5ecd8a02e738bd9adee9266b8fa9b44e22d3ce968d8694238"
-dependencies = [
- "anyhow",
- "chrono",
- "lazy_static",
- "regex",
-]
-
-[[package]]
 name = "deranged"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -473,7 +461,7 @@ dependencies = [
  "async-trait",
  "byte-unit",
  "caith",
- "dateparser",
+ "chrono",
  "dotenvy",
  "log",
  "maplit",
@@ -1024,12 +1012,6 @@ checksum = "1868808506b929d7b0cfa8f75951347aa71bb21144b7791bae35d9bccfcfe37a"
 dependencies = [
  "wasm-bindgen",
 ]
-
-[[package]]
-name = "lazy_static"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"

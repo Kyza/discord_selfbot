@@ -8,6 +8,7 @@ pub struct Data {
 	pub bot_start_time: std::time::Instant,
 	pub http: reqwest::Client,
 	pub wolfram_alpha_full_app_id: String,
+	// pub tz: Tz,
 	// pub godbolt_metadata:
 	// 	std::sync::Mutex<commands::godbolt::GodboltMetadata>,
 }
@@ -23,6 +24,10 @@ impl Data {
 			http: reqwest::Client::new(),
 			wolfram_alpha_full_app_id: env::var("WOLFRAM_ALPHA_FULL_APP_ID")
 				.expect("WOLFRAM_ALPHA_FULL_APP_ID is required"),
+			// tz: env::var("TIMEZONE")
+			// 	.expect("TIMEZONE is required")
+			// 	.parse()
+			// 	.expect("TIMEZONE is invalid"),
 			// godbolt_metadata: std::sync::Mutex::new(
 			// 	commands::godbolt::GodboltMetadata::default(),
 			// ),

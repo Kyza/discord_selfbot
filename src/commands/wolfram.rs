@@ -1,10 +1,20 @@
 use anyhow::{anyhow, Result};
 use poise::{
-	serenity_prelude::{CreateAllowedMentions, CreateAttachment},
+	serenity_prelude::{
+		CreateAllowedMentions, CreateAttachment, CreateEmbed,
+	},
 	CreateReply,
 };
 
+const EMBED_COLOR: u32 = 0xff6600;
+
 use crate::types::Context;
+
+#[derive(Debug)]
+pub enum Pod {
+	Plaintext(String),
+	Image(String),
+}
 
 /// Queries Wolfram Alpha.
 #[poise::command(
@@ -18,14 +28,17 @@ use crate::types::Context;
 pub async fn wolfram(
 	ctx: Context<'_>,
 	#[description = "Query."] query: String,
+	#[description = "Whether or not to send images."] images: Option<bool>,
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
 ) -> Result<()> {
+	ctx.defer().await?;
+
 	let full_results_api_url = format!(
-       "https://api.wolframalpha.com/v2/query?input={}&format=plaintext,image&output=JSON&appid={}",
-       urlencoding::encode(&query),
-       ctx.data().wolfram_alpha_full_app_id
+      "https://api.wolframalpha.com/v2/query?input={}&format=plaintext,image&reinterpret=true&output=JSON&appid={}",
+      urlencoding::encode(&query),
+      ctx.data().wolfram_alpha_full_app_id
    );
 
 	let response = ctx.data().http.get(full_results_api_url).send().await?;
@@ -41,60 +54,110 @@ pub async fn wolfram(
 		.as_array()
 		.ok_or_else(|| anyhow!("Invalid response format"))?;
 
-	let mut markdown = String::new();
-
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.ephemeral(ephemeral.unwrap_or(false));
 
-	for pod in pods {
-		let mut images = Vec::new();
+	let mut main_embed = CreateEmbed::default().color(EMBED_COLOR);
 
+	let mut embeds = Vec::new();
+
+	let mut attachment_count = 0;
+
+	for pod in pods {
 		let title = pod["title"].as_str().unwrap_or("Untitled");
 		let subpods = pod["subpods"]
 			.as_array()
 			.ok_or_else(|| anyhow!("Invalid subpods format"))?;
 
-		let mut pod_content = String::new();
-		let mut has_plaintext = false;
+		for (index, subpod) in subpods.iter().enumerate() {
+			let plaintext = subpod["plaintext"].as_str();
+			let image = if let Some(image_url) = subpod["img"]["src"].as_str()
+			{
+				Some(image_url)
+			} else {
+				None
+			};
+			let image_type = subpod["img"]["type"].as_str();
 
-		for (_index, subpod) in subpods.iter().enumerate() {
-			if let Some(plaintext) = subpod["plaintext"].as_str() {
-				if !plaintext.is_empty() {
-					has_plaintext = true;
-					pod_content
-						.push_str(&format!("```rs\n{}\n```", plaintext));
+			if !images.unwrap_or(true) {
+				if let Some(plaintext) = plaintext {
+					main_embed = main_embed.field(
+						if index == 0 { title } else { "" },
+						&format!("```rs\n{}\n```", plaintext),
+						false,
+					);
 				}
-			}
+			} else {
+				match (plaintext, image, image_type) {
+					(Some(plaintext), _, Some("Default") | None) => {
+						if !plaintext.is_empty() {
+							main_embed = main_embed.field(
+								if index == 0 { title } else { "" },
+								&format!("```rs\n{}\n```", plaintext),
+								false,
+							);
+							// has_plaintext = true;
+							// pod_content
+							// 	.push_str(&format!("```rs\n{}\n```", plaintext));
+						}
+					}
+					(_, Some(image), _) => {
+						// Sometimes the image doesn't load, so download it because maybe that'll fix it.
+						let image_bytes = ctx
+							.data()
+							.http
+							.get(image)
+							.send()
+							.await?
+							.bytes()
+							.await?;
+						let image_name = format!(
+							"wolfram_result_{}.gif",
+							attachment_count
+						);
+						attachment_count += 1;
+						let image = CreateAttachment::bytes(
+							image_bytes,
+							image_name.clone(),
+						);
 
-			if let Some(image_url) = subpod["img"]["src"].as_str() {
-				let image_response =
-					ctx.data().http.get(image_url).send().await?;
-				if image_response.status().is_success() {
-					let image_bytes = image_response.bytes().await?;
-					let image_filename =
-						format!("wolfram_result_{}.gif", images.len() + 1);
-					images.push(CreateAttachment::bytes(
-						image_bytes,
-						image_filename.clone(),
-					));
-				}
-			}
-		}
+						reply = reply.attachment(image);
 
-		if has_plaintext {
-			markdown.push_str(&format!("**__{}:__**\n", title));
-			markdown.push_str(&pod_content);
-		} else if !pod_content.is_empty() {
-			markdown.push_str(&pod_content);
-		} else {
-			for image in images {
-				reply = reply.attachment(image);
+						let embed = CreateEmbed::default()
+							.title(title)
+							.attachment(image_name)
+							.color(EMBED_COLOR);
+						embeds.push(embed);
+					}
+					(Some(plaintext), _, _) => {
+						if !plaintext.is_empty() {
+							main_embed = main_embed.field(
+								if index == 0 { title } else { "" },
+								&format!("```rs\n{}\n```", plaintext),
+								false,
+							);
+							// has_plaintext = true;
+							// pod_content
+							// 	.push_str(&format!("```rs\n{}\n```", plaintext));
+						}
+					}
+					_ => (),
+				};
 			}
 		}
 	}
 
-	reply = reply.content(markdown);
+	println!("Embeds: {}", embeds.len());
+
+	reply = reply.embed(main_embed);
+
+	for (index, embed) in embeds.iter().enumerate() {
+		if index == 9 {
+			break;
+		}
+		reply = reply.embed(embed.clone());
+	}
 
 	ctx.send(reply).await?;
 	Ok(())
