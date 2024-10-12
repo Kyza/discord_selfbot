@@ -24,6 +24,13 @@ pub async fn age(
 		bool,
 	>,
 ) -> Result<()> {
+	let ephemeral = ephemeral.unwrap_or(false);
+	if ephemeral {
+		ctx.defer_ephemeral().await?;
+	} else {
+		ctx.defer().await?;
+	}
+
 	let u = user.as_ref().unwrap_or_else(|| ctx.author());
 	let response = format!(
 		"{} was created at <t:{}:F>.",
@@ -34,7 +41,7 @@ pub async fn age(
 	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.content(response)
-		.ephemeral(ephemeral.unwrap_or(false));
+		.ephemeral(ephemeral);
 
 	ctx.send(reply).await?;
 	Ok(())

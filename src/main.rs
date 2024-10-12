@@ -26,7 +26,6 @@ async fn main() {
 				commands::cobalt(),
 				commands::crate_(),
 				commands::doc(),
-				commands::cleanup(),
 				commands::uptime(),
 				commands::help(),
 				commands::snowstamp(),

@@ -24,6 +24,13 @@ pub async fn unicode(
 		bool,
 	>,
 ) -> Result<()> {
+	let ephemeral = ephemeral.unwrap_or(false);
+	if ephemeral {
+		ctx.defer_ephemeral().await?;
+	} else {
+		ctx.defer().await?;
+	}
+
 	let text = if let Some(input) = to_unicode {
 		// Convert to Unicode
 		input
@@ -48,7 +55,7 @@ pub async fn unicode(
 	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.content(format!("```\n{}\n```", text))
-		.ephemeral(ephemeral.unwrap_or(false));
+		.ephemeral(ephemeral);
 
 	ctx.send(reply).await?;
 	Ok(())

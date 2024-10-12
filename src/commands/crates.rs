@@ -127,6 +127,13 @@ pub async fn crate_(
 		bool,
 	>,
 ) -> Result<()> {
+	let ephemeral = ephemeral.unwrap_or(false);
+	if ephemeral {
+		ctx.defer_ephemeral().await?;
+	} else {
+		ctx.defer().await?;
+	}
+
 	if let Some(url) = rustc_crate_link(&crate_name) {
 		ctx.say(url).await?;
 		return Ok(());
@@ -163,7 +170,7 @@ pub async fn crate_(
 					)
 					.color(crate::types::EMBED_COLOR),
 			)
-			.ephemeral(ephemeral.unwrap_or(false)),
+			.ephemeral(ephemeral),
 	)
 	.await?;
 

@@ -1,8 +1,10 @@
 use core::str;
-use std::path::Path;
+use std::io::{Read, Write};
 use std::process::Command;
+use std::{fs::File, path::Path};
 
 use anyhow::{anyhow, Result};
+use byte_unit::Byte;
 use tempfile::NamedTempFile;
 
 #[derive(Debug)]
@@ -12,19 +14,18 @@ pub struct CompressedFile {
 	pub quality: u32,
 }
 
-pub fn convert_file(
-	input: &Path,
-	compress: bool,
-) -> Result<(NamedTempFile, String)> {
+pub fn compress_file(input: &Path) -> Result<(NamedTempFile, String)> {
 	let media_type = determine_media_type(input);
 
 	println!("Media type: {:?}", media_type);
 
 	match media_type {
 		MediaType::Image => {
-			Ok((convert_image(input, compress)?, "webp".to_string()))
+			Ok((compress_image(input, 0)?, "webp".to_string()))
 		}
-		MediaType::Video => Ok((convert_video(input)?, "mp4".to_string())),
+		MediaType::Video => {
+			Ok((compress_video(input, 0)?, "mp4".to_string()))
+		}
 		MediaType::Unknown => Err(anyhow!("Unsupported file type.")),
 	}
 }
@@ -79,17 +80,39 @@ fn determine_media_type(file_path: &Path) -> MediaType {
 	MediaType::Unknown
 }
 
-fn convert_video(input: &Path) -> Result<NamedTempFile> {
+const TARGET_SIZE_MB: u64 = 8;
+fn mb_to_bytes(mb: u64) -> u64 {
+	mb * 8 * 1024 * 1024
+}
+
+fn compress_video(input: &Path, attempt: u8) -> Result<NamedTempFile> {
 	if !input.exists() {
 		return Err(anyhow!(
 			"Input file does not exist: {}",
 			input.display()
 		));
 	}
+	if attempt >= 2 {
+		return Err(anyhow!("Ran out of attempts while compressing video."));
+	}
+
+	let mut input_file = File::open(input)?;
+
+	let target_size_adjusted = mb_to_bytes(TARGET_SIZE_MB - attempt as u64);
+
+	println!(
+		"Target size adjusted: {}",
+		Byte::from_u64(target_size_adjusted)
+	);
+
+	// If the file's already small enough, don't bother converting it.
+	if input_file.metadata()?.len() <= target_size_adjusted {
+		return Ok(file_to_named_temp_file(&mut input_file)?);
+	}
 
 	let input_path = input.to_str().unwrap();
 
-	let output = tempfile::NamedTempFile::new()?;
+	let output = NamedTempFile::new()?;
 	let output_path = output.path().to_str().unwrap();
 
 	println!("Converting video.");
@@ -108,7 +131,7 @@ fn convert_video(input: &Path) -> Result<NamedTempFile> {
 		video_info.video_bitrate,
 		video_info.audio_bitrate,
 		video_info.duration,
-		(7.5 * 8.0 * 1024.0 * 1024.0) as u64,
+		target_size_adjusted,
 	);
 	if new_bitrate < video_info.video_bitrate {
 		println!("Reducing FPS to 30.");
@@ -138,15 +161,24 @@ fn convert_video(input: &Path) -> Result<NamedTempFile> {
 		));
 	}
 
+	let output_file_size = output.as_file().metadata()?.len();
+	let target_size = mb_to_bytes(TARGET_SIZE_MB);
+	if output_file_size > target_size {
+		return compress_video(input, attempt + 1);
+	}
+
 	Ok(output)
 }
 
-fn convert_image(input: &Path, compress: bool) -> Result<NamedTempFile> {
+fn compress_image(input: &Path, attempt: u8) -> Result<NamedTempFile> {
 	if !input.exists() {
 		return Err(anyhow!(
 			"Input file does not exist: {}",
 			input.display()
 		));
+	}
+	if attempt >= 3 {
+		return Err(anyhow!("Ran out of attempts while compressing image."));
 	}
 
 	let input_path = input.to_str().unwrap();
@@ -184,10 +216,8 @@ fn convert_image(input: &Path, compress: bool) -> Result<NamedTempFile> {
 		"webp",
 	]);
 
-	if compress {
-		println!("Compressing image.");
-		ffmpeg_command.args(&["-q:v", "90"]);
-	}
+	println!("Compressing image.");
+	ffmpeg_command.args(&["-q:v", &(90 - (attempt as u64 * 5)).to_string()]);
 
 	ffmpeg_command.arg(output_path);
 
@@ -202,7 +232,21 @@ fn convert_image(input: &Path, compress: bool) -> Result<NamedTempFile> {
 		));
 	}
 
+	let output_file_size = output.as_file().metadata()?.len();
+	let target_size = mb_to_bytes(TARGET_SIZE_MB);
+	if output_file_size > target_size {
+		return compress_image(input, attempt + 1);
+	}
+
 	Ok(output)
+}
+
+pub fn file_to_named_temp_file(file: &mut File) -> Result<NamedTempFile> {
+	let mut tempfile = NamedTempFile::new()?;
+	let mut buffer = Vec::new();
+	file.read_to_end(&mut buffer)?;
+	tempfile.write_all(&buffer[..])?;
+	return Ok(tempfile);
 }
 
 pub fn estimate_media_size(

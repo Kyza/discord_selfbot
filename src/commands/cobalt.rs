@@ -130,11 +130,16 @@ pub async fn cobalt(
 		bool,
 	>,
 ) -> Result<()> {
-	ctx.defer().await?;
+	let ephemeral = ephemeral.unwrap_or(false);
+	if ephemeral {
+		ctx.defer_ephemeral().await?;
+	} else {
+		ctx.defer().await?;
+	}
 
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
-		.ephemeral(ephemeral.unwrap_or(false));
+		.ephemeral(ephemeral);
 
 	let result = ctx
 		.data()
@@ -206,10 +211,8 @@ pub async fn cobalt(
 				file.write_all(&content)?;
 				// std::fs::copy(file.path(), downloaded_file_name.clone())?;
 				// Compress the file.
-				let (compressed_file, extension) = media::convert_file(
-					file.path(),
-					is_too_large(content_length),
-				)?;
+				let (compressed_file, extension) =
+					media::compress_file(file.path())?;
 				let upload_file_name = &change_extension(
 					downloaded_file_name.clone(),
 					&extension,

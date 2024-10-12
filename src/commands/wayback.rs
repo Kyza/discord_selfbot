@@ -34,6 +34,13 @@ pub async fn wayback(
 		bool,
 	>,
 ) -> Result<()> {
+	let ephemeral = ephemeral.unwrap_or(false);
+	if ephemeral {
+		ctx.defer_ephemeral().await?;
+	} else {
+		ctx.defer().await?;
+	}
+
 	let url = urlencoding::encode(url.as_str());
 	let response = match action.unwrap_or(WaybackAction::Latest) {
 		WaybackAction::Latest => {
@@ -48,7 +55,7 @@ pub async fn wayback(
 	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.content(response)
-		.ephemeral(ephemeral.unwrap_or(false));
+		.ephemeral(ephemeral);
 
 	ctx.send(reply).await?;
 	Ok(())

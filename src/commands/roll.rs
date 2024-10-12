@@ -57,13 +57,20 @@ pub async fn roll(
 		bool,
 	>,
 ) -> Result<()> {
+	let ephemeral = ephemeral.unwrap_or(false);
+	if ephemeral {
+		ctx.defer_ephemeral().await?;
+	} else {
+		ctx.defer().await?;
+	}
+
 	let roll_result = Roller::new(&text)?.roll()?;
 	let roll_result = roll_result.get_result();
 	let text_markdown = format_roll(&roll_result, true);
 
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
-		.ephemeral(ephemeral.unwrap_or(false));
+		.ephemeral(ephemeral);
 
 	reply = if text_markdown.len() > 2000 {
 		let text_plain = format_roll(&roll_result, false);

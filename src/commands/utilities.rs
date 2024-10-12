@@ -61,9 +61,22 @@ You can edit your message to the bot and the bot will edit its response.";
 	track_edits,
 	install_context = "User",
 	interaction_context = "Guild|BotDm|PrivateChannel",
-	category = "Utilities"
+	category = "Utilities",
+	ephemeral
 )]
-pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn uptime(
+	ctx: Context<'_>,
+	#[description = "Whether or not to show the message."] ephemeral: Option<
+		bool,
+	>,
+) -> Result<(), Error> {
+	let ephemeral = ephemeral.unwrap_or(false);
+	if ephemeral {
+		ctx.defer_ephemeral().await?;
+	} else {
+		ctx.defer().await?;
+	}
+
 	let uptime = ctx.data().bot_start_time.elapsed();
 
 	let div_mod = |a, b| (a / b, a % b);
@@ -77,47 +90,4 @@ pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
 		.await?;
 
 	Ok(())
-}
-
-/// Deletes the bot's messages for cleanup.
-///
-/// /cleanup [limit]
-///
-/// By default, only the most recent bot message is deleted (limit = 1).
-///
-/// Deletes the bot's messages for cleanup.
-/// You can specify how many messages to look for. Only messages within the last 24 hours can be deleted.
-#[poise::command(
-	slash_command,
-	owners_only,
-	track_edits,
-	install_context = "User",
-	interaction_context = "Guild|BotDm|PrivateChannel",
-	category = "Utilities",
-	on_error = "crate::helpers::acknowledge_fail"
-)]
-pub async fn cleanup(
-	ctx: Context<'_>,
-	#[description = "Number of messages to delete"] num_messages: Option<
-		usize,
-	>,
-) -> Result<(), Error> {
-	let num_messages = num_messages.unwrap_or(1);
-
-	let messages_to_delete = ctx
-		.channel_id()
-		.messages(&ctx, serenity::GetMessages::new())
-		.await?
-		.into_iter()
-		.filter(|msg| {
-			(msg.author.id == ctx.data().application_id)
-				&& (*ctx.created_at() - *msg.timestamp).num_hours() < 24
-		})
-		.take(num_messages);
-
-	ctx.channel_id()
-		.delete_messages(&ctx, messages_to_delete)
-		.await?;
-
-	crate::helpers::acknowledge_success(ctx, "rustOk", '👌').await
 }

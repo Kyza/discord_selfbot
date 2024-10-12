@@ -225,13 +225,20 @@ pub async fn snowstamp(
 		bool,
 	>,
 ) -> Result<()> {
+	let ephemeral = ephemeral.unwrap_or(false);
+	if ephemeral {
+		ctx.defer_ephemeral().await?;
+	} else {
+		ctx.defer().await?;
+	}
+
 	let format_letter = serde_plain::to_string::<TimestampFormat>(
 		&format.unwrap_or(TimestampFormat::ShortDateTime),
 	)?;
 
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
-		.ephemeral(ephemeral.unwrap_or(false));
+		.ephemeral(ephemeral);
 
 	let id_or_time = match (id, year, month, day, hour, minute, second) {
 		(Some(id), None, None, None, None, None, None) => IdOrTime::Id(id),

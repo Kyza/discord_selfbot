@@ -20,6 +20,13 @@ pub async fn github(
 		bool,
 	>,
 ) -> Result<()> {
+	let ephemeral = ephemeral.unwrap_or(false);
+	if ephemeral {
+		ctx.defer_ephemeral().await?;
+	} else {
+		ctx.defer().await?;
+	}
+
 	let response = format!(
 		"[{user}/{repository}](https://github.com/{user}/{repository})",
 	);
@@ -27,7 +34,7 @@ pub async fn github(
 	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.content(response)
-		.ephemeral(ephemeral.unwrap_or(false));
+		.ephemeral(ephemeral);
 
 	ctx.send(reply).await?;
 	Ok(())
