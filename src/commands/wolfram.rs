@@ -1,21 +1,13 @@
-use std::io::Read;
-
-use ab_glyph::{Font, FontRef, FontVec, PxScale};
 use anyhow::{anyhow, Result};
-use image::{ImageFormat, Rgba, RgbaImage};
-use imageproc::{
-	drawing::{draw_filled_rect_mut, draw_hollow_rect_mut, draw_text_mut},
-	rect::Rect,
-};
 use poise::{
 	serenity_prelude::{
 		CreateActionRow, CreateAllowedMentions, CreateAttachment,
-		CreateButton, CreateEmbed,
+		CreateButton,
 	},
 	CreateReply,
 };
 
-const EMBED_COLOR: u32 = 0xff6600;
+// const EMBED_COLOR: u32 = 0xff6600;
 
 use crate::types::Context;
 
@@ -97,7 +89,7 @@ pub async fn wolfram(
 				"https://www.wolframalpha.com/input?i={}",
 				query
 			))
-			.label("Download"),
+			.label("View Online"),
 		])])
 		.ephemeral(ephemeral);
 
@@ -433,8 +425,8 @@ pub async fn wolfram(
 // 	combined_image
 // }
 
-fn rgba_to_vec(img: RgbaImage) -> Result<Vec<u8>, image::ImageError> {
-	let mut bytes: Vec<u8> = Vec::new();
-	img.write_to(&mut std::io::Cursor::new(&mut bytes), ImageFormat::WebP)?;
-	Ok(bytes)
-}
+// fn rgba_to_vec(img: RgbaImage) -> Result<Vec<u8>, image::ImageError> {
+// 	let mut bytes: Vec<u8> = Vec::new();
+// 	img.write_to(&mut std::io::Cursor::new(&mut bytes), ImageFormat::WebP)?;
+// 	Ok(bytes)
+// }
