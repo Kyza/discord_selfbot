@@ -43,7 +43,7 @@ pub async fn unicode(
 		input
 			.split_whitespace()
 			.filter_map(|s| {
-				u32::from_str_radix(&s.trim_start_matches("U+"), 16).ok()
+				u32::from_str_radix(s.trim_start_matches("U+"), 16).ok()
 			})
 			.filter_map(char::from_u32)
 			.collect::<String>()

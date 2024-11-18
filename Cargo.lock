@@ -636,8 +636,10 @@ dependencies = [
  "caith",
  "chrono",
  "dotenvy",
+ "heck",
  "image",
  "imageproc",
+ "indexmap",
  "log",
  "maplit",
  "num-format",
@@ -1919,7 +1921,7 @@ dependencies = [
 [[package]]
 name = "poise"
 version = "0.6.1"
-source = "git+https://github.com/fgardt/poise?rev=a8a987d#a8a987df8eee449a69c6ca3544347c2c2f3697e5"
+source = "git+https://github.com/serenity-rs/poise#22b5b01ba54f7eb74f8fd2f3d52032fd7ef2dc01"
 dependencies = [
  "async-trait",
  "derivative",
@@ -1937,7 +1939,7 @@ dependencies = [
 [[package]]
 name = "poise_macros"
 version = "0.6.1"
-source = "git+https://github.com/fgardt/poise?rev=a8a987d#a8a987df8eee449a69c6ca3544347c2c2f3697e5"
+source = "git+https://github.com/serenity-rs/poise#22b5b01ba54f7eb74f8fd2f3d52032fd7ef2dc01"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -2729,9 +2731,9 @@ dependencies = [
 
 [[package]]
 name = "serenity"
-version = "0.12.2"
+version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "880a04106592d0a8f5bdacb1d935889bfbccb4a14f7074984d9cd857235d34ac"
+checksum = "3d72ec4323681bf9a3cabe40fd080abc2435859b502a1b5aa9bf693f125bfa76"
 dependencies = [
  "arrayvec",
  "async-trait",

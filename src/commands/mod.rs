@@ -1,16 +1,6 @@
-macro_rules! slash_commands {
-	($name:ident) => {
-		mod $name;
-		pub use $name::*;
-	};
-	($($name:ident),* $(,)?) => {
-		$(
-			slash_commands!($name);
-		)*
-	};
-}
+use crate::crunch;
 
-slash_commands![
+crunch![
 	age, github, cobalt, crates, utilities, snowstamp, wolfram, wayback,
 	unicode, escape, roll
 ];

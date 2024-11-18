@@ -14,6 +14,12 @@ pub struct Data {
 	// 	std::sync::Mutex<commands::godbolt::GodboltMetadata>,
 }
 
+impl Default for Data {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 impl Data {
 	pub fn new() -> Self {
 		Self {

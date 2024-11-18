@@ -26,7 +26,10 @@ pub fn compress_file(input: &Path) -> Result<(NamedTempFile, String)> {
 		MediaType::Video => {
 			Ok((compress_video(input, 0)?, "mp4".to_string()))
 		}
-		MediaType::Unknown => Err(anyhow!("Unsupported file type.")),
+		// MediaType::Audio => {
+		// 	Ok((compress_audio(input, 0)?, "mp3".to_string()))
+		// }
+		MediaType::Unknown | _ => Err(anyhow!("Unsupported file type.")),
 	}
 }
 
@@ -34,12 +37,13 @@ pub fn compress_file(input: &Path) -> Result<(NamedTempFile, String)> {
 enum MediaType {
 	Image,
 	Video,
+	Audio,
 	Unknown,
 }
 
 fn determine_media_type(file_path: &Path) -> MediaType {
 	let output = Command::new("ffprobe")
-		.args(&[
+		.args([
 			"-v",
 			"error",
 			"-show_entries",
@@ -82,7 +86,7 @@ fn determine_media_type(file_path: &Path) -> MediaType {
 
 const TARGET_SIZE_MB: u64 = 8;
 fn mb_to_bytes(mb: u64) -> u64 {
-	mb * 8 * 1024 * 1024
+	mb * 1024 * 1024
 }
 
 fn compress_video(input: &Path, attempt: u8) -> Result<NamedTempFile> {
@@ -98,7 +102,8 @@ fn compress_video(input: &Path, attempt: u8) -> Result<NamedTempFile> {
 
 	let mut input_file = File::open(input)?;
 
-	let target_size_adjusted = mb_to_bytes(TARGET_SIZE_MB - attempt as u64);
+	let target_size_adjusted =
+		mb_to_bytes(TARGET_SIZE_MB - attempt as u64 - 1);
 
 	println!(
 		"Target size adjusted: {}",
@@ -107,7 +112,8 @@ fn compress_video(input: &Path, attempt: u8) -> Result<NamedTempFile> {
 
 	// If the file's already small enough, don't bother converting it.
 	if input_file.metadata()?.len() <= target_size_adjusted {
-		return Ok(file_to_named_temp_file(&mut input_file)?);
+		println!("File is already small enough.");
+		return file_to_named_temp_file(&mut input_file);
 	}
 
 	let input_path = input.to_str().unwrap();
@@ -119,7 +125,7 @@ fn compress_video(input: &Path, attempt: u8) -> Result<NamedTempFile> {
 
 	let mut ffmpeg_command = Command::new("ffmpeg");
 
-	ffmpeg_command.args(&[
+	ffmpeg_command.args([
 		"-y", "-i", input_path, "-c:v", "libx265", "-preset", "medium", "-f",
 		"mp4",
 	]);
@@ -131,11 +137,11 @@ fn compress_video(input: &Path, attempt: u8) -> Result<NamedTempFile> {
 		video_info.video_bitrate,
 		video_info.audio_bitrate,
 		video_info.duration,
-		target_size_adjusted,
+		target_size_adjusted * 8, // Convert to bits
 	);
 	if new_bitrate < video_info.video_bitrate {
 		println!("Reducing FPS to 30.");
-		ffmpeg_command.args(&["-vf", &format!("fps={}", 30)]);
+		ffmpeg_command.args(["-vf", &format!("fps={}", 30)]);
 	}
 
 	let new_bitrate = format!("{}k", new_bitrate / 1024);
@@ -146,7 +152,7 @@ fn compress_video(input: &Path, attempt: u8) -> Result<NamedTempFile> {
 	);
 	println!("New bitrate: {}", new_bitrate);
 
-	ffmpeg_command.args(&["-b:v", &new_bitrate]);
+	ffmpeg_command.args(["-b:v", &new_bitrate]);
 
 	ffmpeg_command.arg(output_path);
 
@@ -193,7 +199,7 @@ fn compress_image(input: &Path, attempt: u8) -> Result<NamedTempFile> {
 
 	let mut ffmpeg_command = Command::new("ffmpeg");
 
-	ffmpeg_command.args(&[
+	ffmpeg_command.args([
 		"-y",
 		"-i",
 		input_path,
@@ -217,7 +223,7 @@ fn compress_image(input: &Path, attempt: u8) -> Result<NamedTempFile> {
 	]);
 
 	println!("Compressing image.");
-	ffmpeg_command.args(&["-q:v", &(90 - (attempt as u64 * 5)).to_string()]);
+	ffmpeg_command.args(["-q:v", &(90 - (attempt as u64 * 5)).to_string()]);
 
 	ffmpeg_command.arg(output_path);
 
@@ -246,7 +252,7 @@ pub fn file_to_named_temp_file(file: &mut File) -> Result<NamedTempFile> {
 	let mut buffer = Vec::new();
 	file.read_to_end(&mut buffer)?;
 	tempfile.write_all(&buffer[..])?;
-	return Ok(tempfile);
+	Ok(tempfile)
 }
 
 pub fn estimate_media_size(

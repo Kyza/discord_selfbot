@@ -66,14 +66,14 @@ pub async fn roll(
 
 	let roll_result = Roller::new(&text)?.roll()?;
 	let roll_result = roll_result.get_result();
-	let text_markdown = format_roll(&roll_result, true);
+	let text_markdown = format_roll(roll_result, true);
 
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.ephemeral(ephemeral);
 
 	reply = if text_markdown.len() > 2000 {
-		let text_plain = format_roll(&roll_result, false);
+		let text_plain = format_roll(roll_result, false);
 		reply.attachment(CreateAttachment::bytes(
 			text_plain.as_bytes().to_vec(),
 			"roll_result.md".to_string(),

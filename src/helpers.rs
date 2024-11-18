@@ -6,6 +6,17 @@ use reqwest::header;
 
 use crate::types::{Context, Data};
 
+#[macro_export]
+macro_rules! crunch {
+	($($name:ident),* $(,)?) => {
+		$(
+			mod $name;
+			pub use $name::*;
+		)*
+	};
+}
+pub use crunch;
+
 /// Used for playground stdout + stderr, or godbolt asm + stderr
 /// If the return value is empty, returns " " instead, because Discord displays those better in
 /// a code block than "".

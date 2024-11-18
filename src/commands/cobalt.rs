@@ -178,7 +178,7 @@ pub async fn cobalt(
 					.data()
 					.http
 					.get(
-						&response
+						response
 							.url
 							.clone()
 							.expect("There was no download URL."),
@@ -244,7 +244,7 @@ pub async fn cobalt(
 						])])
 						.content(format!(
 							"<{}>\n-# {}\nFile size: `{:#}`",
-							url.to_string(),
+							url,
 							upload_file_name,
 							Byte::from_u64(compressed_file_size)
 						));
@@ -267,7 +267,7 @@ pub async fn cobalt(
 					])])
 					.content(format!(
 						"<{}>\n-# {}",
-						url.to_string(),
+						url,
 						upload_file_name,
 					));
 				let sent_response = ctx.send(reply.clone()).await;
@@ -281,7 +281,7 @@ pub async fn cobalt(
 						])])
 						.content(format!(
 							"<{}>\n-# {}\n```json\n{}\n```File size: `{:#}`",
-							url.to_string(),
+							url,
 							upload_file_name,
 							e,
 							Byte::from_u64(content_length)
