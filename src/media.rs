@@ -29,7 +29,7 @@ pub fn compress_file(input: &Path) -> Result<(NamedTempFile, String)> {
 		// MediaType::Audio => {
 		// 	Ok((compress_audio(input, 0)?, "mp3".to_string()))
 		// }
-		MediaType::Unknown | _ => Err(anyhow!("Unsupported file type.")),
+		_ => Err(anyhow!("Unsupported file type.")),
 	}
 }
 
