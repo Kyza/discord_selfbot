@@ -1,4 +1,4 @@
-use std::{io::Write, os::windows::fs::MetadataExt};
+use std::io::Write;
 
 use anyhow::Result;
 use byte_unit::Byte;
@@ -144,7 +144,7 @@ pub async fn cobalt(
 	let result = ctx
 		.data()
 		.http
-		.post("https://nyc1.coapi.ggtyler.dev/")
+		.post("https://localhost:9000/")
 		.header(header::ACCEPT, "application/json")
 		.header(header::CONTENT_TYPE, "application/json")
 		.json(&CobaltRequest {
@@ -226,7 +226,7 @@ pub async fn cobalt(
 				// )?;
 
 				let compressed_file_size =
-					compressed_file.as_file().metadata()?.file_size();
+					compressed_file.as_file().metadata()?.len();
 
 				println!("File name after: {}", upload_file_name);
 
@@ -265,11 +265,7 @@ pub async fn cobalt(
 						CreateButton::new_link(response.url.clone().unwrap())
 							.label("Download"),
 					])])
-					.content(format!(
-						"<{}>\n-# {}",
-						url,
-						upload_file_name,
-					));
+					.content(format!("<{}>\n-# {}", url, upload_file_name,));
 				let sent_response = ctx.send(reply.clone()).await;
 
 				if let Err(e) = sent_response {

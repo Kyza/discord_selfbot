@@ -23,7 +23,7 @@ async fn main() {
 			commands: vec![
 				commands::age(),
 				commands::github(),
-				commands::cobalt(),
+				commands::fix(),
 				commands::crate_(),
 				commands::doc(),
 				commands::uptime(),
