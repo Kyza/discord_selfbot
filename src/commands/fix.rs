@@ -1,8 +1,7 @@
 use crate::types::Context;
 use anyhow::Result;
 use poise::{
-	serenity_prelude::{CreateAllowedMentions, CreateAttachment},
-	ChoiceParameter, CreateReply,
+	serenity_prelude::CreateAllowedMentions, ChoiceParameter, CreateReply,
 };
 use serde::{Deserialize, Serialize};
 use url::{Host, Url};
@@ -92,7 +91,7 @@ pub async fn fix(
 		ctx.defer().await?;
 	}
 
-	let mut reply = CreateReply::default()
+	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.ephemeral(ephemeral);
 

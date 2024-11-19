@@ -37,7 +37,7 @@ pub fn compress_file(input: &Path) -> Result<(NamedTempFile, String)> {
 enum MediaType {
 	Image,
 	Video,
-	Audio,
+	// Audio,
 	Unknown,
 }
 
