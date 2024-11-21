@@ -9,6 +9,7 @@ use types::Data;
 pub mod commands;
 pub mod helpers;
 pub mod media;
+pub mod os_command;
 pub mod types;
 
 #[dotenvy::load]
@@ -34,6 +35,16 @@ async fn main() {
 				commands::unicode(),
 				commands::escape(),
 				commands::roll(),
+				commands::youtube(),
+				commands::microbench(),
+				commands::miri(),
+				commands::expand(),
+				commands::clippy(),
+				commands::fmt(),
+				commands::play(),
+				commands::playwarn(),
+				commands::eval(),
+				commands::procmacro(),
 			],
 			..Default::default()
 		})

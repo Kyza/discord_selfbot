@@ -24,3 +24,6 @@ caith = { git = "https://github.com/Kyza/caith.git", rev = "a05c6a" }
 chrono = "0.4.38"
 heck = "0.5.0"
 indexmap = "2.6.0"
+rand = "0.8.5"
+tracing = "0.1.40"
+syn = { version = "2.0.89", features = ["full"] }
