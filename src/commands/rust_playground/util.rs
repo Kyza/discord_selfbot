@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::Result;
 use poise::{serenity_prelude as serenity, CreateReply, ReplyHandle};
+use regex::Regex;
 use serenity::ComponentInteraction;
 
 use crate::types::Context;
@@ -104,6 +105,45 @@ pub fn generic_help(spec: GenericHelp<'_>) -> String {
 	}
 
 	reply
+}
+
+/// Extracts all code blocks from a string. Supports both multi-line code blocks with
+/// triple backticks and inline code blocks with single backticks.
+///
+/// # Arguments
+/// * `text` - The input text containing code blocks
+///
+/// # Returns
+/// * A vector of strings, where each string is the content of a code block
+///
+/// # Example
+/// ```
+/// let text = "Here is some `inline code` and:\n```\nmultiline\ncode block\n```";
+/// let blocks = get_code_blocks(text);
+/// assert_eq!(blocks, vec!["inline code", "multiline\ncode block"]);
+/// ```
+pub fn get_codeblocks(text: impl ToString) -> Vec<String> {
+	let text = text.to_string();
+
+	let mut blocks = Vec::new();
+
+	// Match triple backtick blocks with optional language identifier
+	let multiline_re = Regex::new(r"```(?:\w*\n)?([^`]+?)```").unwrap();
+	for cap in multiline_re.captures_iter(&text) {
+		if let Some(block) = cap.get(1) {
+			blocks.push(block.as_str().trim().to_string());
+		}
+	}
+
+	// Match inline code blocks with single backticks
+	let inline_re = Regex::new(r"`([^`]+?)`").unwrap();
+	for cap in inline_re.captures_iter(&text) {
+		if let Some(block) = cap.get(1) {
+			blocks.push(block.as_str().trim().to_string());
+		}
+	}
+
+	blocks
 }
 
 /// Strip the input according to a list of start tokens and end tokens. Everything after the start

@@ -8,6 +8,7 @@ use types::Data;
 
 pub mod commands;
 pub mod helpers;
+pub mod key_value_args_utils;
 pub mod media;
 pub mod os_command;
 pub mod types;
@@ -36,15 +37,17 @@ async fn main() {
 				commands::escape(),
 				commands::roll(),
 				commands::youtube(),
-				commands::microbench(),
-				commands::miri(),
-				commands::expand(),
-				commands::clippy(),
-				commands::fmt(),
-				commands::play(),
-				commands::playwarn(),
-				commands::eval(),
-				commands::procmacro(),
+				commands::rust_playground(), // commands::microbench(),
+				                             // commands::miri(),
+				                             // commands::expand(),
+				                             // commands::clippy(),
+				                             // commands::fmt(),
+				                             // commands::rust_playground_context_menu(),
+				                             // commands::playwarn(),
+				                             // commands::playwarn_context_menu(),
+				                             // commands::eval(),
+				                             // commands::eval_context_menu(),
+				                             // commands::procmacro(),
 			],
 			..Default::default()
 		})

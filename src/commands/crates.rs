@@ -7,6 +7,8 @@ use crate::{serenity, types::Context};
 
 const USER_AGENT: &str = "not_kyza/rustbot";
 
+const EMBED_COLOR: (u8, u8, u8) = (0xf7, 0x4c, 0x00);
+
 #[derive(Debug, Deserialize)]
 struct Crates {
 	crates: Vec<Crate>,
@@ -168,7 +170,7 @@ pub async fn crate_(
 							.parse::<serenity::Timestamp>()
 							.unwrap_or(serenity::Timestamp::now()),
 					)
-					.color(crate::types::EMBED_COLOR),
+					.color(EMBED_COLOR),
 			)
 			.ephemeral(ephemeral),
 	)

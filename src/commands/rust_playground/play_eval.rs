@@ -1,6 +1,12 @@
-use anyhow::Error;
+use anyhow::{Error, Result};
+use poise::{
+	execute_modal, serenity_prelude::Message, ApplicationContext, Modal,
+};
 
-use crate::types::Context;
+use crate::{
+	commands::playground::util::extract_codeblock,
+	types::{Context, Data},
+};
 
 use super::{
 	api::{CrateType, PlayResult, PlaygroundRequest},
@@ -54,7 +60,39 @@ async fn play_or_eval(
 	edit_reply(ctx, message, result, &code, &flags, &flag_parse_errors).await
 }
 
-/// Compile and run Rust code in a playground
+/// Compile and run Rust code in a playground.
+#[poise::command(
+	context_menu_command = "Rust Playground",
+	owners_only,
+	track_edits,
+	install_context = "User",
+	interaction_context = "Guild|BotDm|PrivateChannel",
+	help_text_fn = "play_help",
+	category = "Playground"
+)]
+pub async fn rust_playground_context_menu(
+	ctx: Context<'_>,
+	#[description = "Message with Rust code to play as link or ID."]
+	message: Message,
+) -> Result<(), Error> {
+	play_or_eval(
+		ctx,
+		poise::KeyValueArgs::default(),
+		false,
+		extract_codeblock(message.content).expect("Has no codeblock."),
+		ResultHandling::None,
+	)
+	.await
+}
+
+#[derive(Debug, Modal)]
+#[allow(dead_code)] // fields only used for Debug print
+struct PlaygroundModal {
+	first_input: String,
+	second_input: Option<String>,
+}
+
+/// Compile and run Rust code in a playground.
 #[poise::command(
 	slash_command,
 	owners_only,
@@ -64,19 +102,23 @@ async fn play_or_eval(
 	help_text_fn = "play_help",
 	category = "Playground"
 )]
-pub async fn play(
-	ctx: Context<'_>,
-	// flags: poise::KeyValueArgs,
-	code: String,
-) -> Result<(), Error> {
-	play_or_eval(
-		ctx,
-		poise::KeyValueArgs::default(),
-		false,
-		code,
-		ResultHandling::None,
-	)
-	.await
+pub async fn rust_playground(
+	ctx: ApplicationContext<'_, Data, Error>,
+) -> Result<()> {
+	let data = PlaygroundModal::execute(ctx).await?;
+
+	ctx.reply(format!("{:?}", data)).await?;
+
+	Ok(())
+
+	// play_or_eval(
+	// 	ctx,
+	// 	poise::KeyValueArgs::default(),
+	// 	false,
+	// 	code,
+	// 	ResultHandling::None,
+	// )
+	// .await
 }
 
 #[must_use]
@@ -91,7 +133,33 @@ pub fn play_help() -> String {
 	})
 }
 
-/// Compile and run Rust code with warnings
+/// Compile and run Rust code with warnings.
+#[poise::command(
+	context_menu_command = "Rust Warnings Playground",
+	owners_only,
+	track_edits,
+	install_context = "User",
+	interaction_context = "Guild|BotDm|PrivateChannel",
+   hide_in_help, // don't clutter help menu with something that ?play can do too
+   help_text_fn = "playwarn_help",
+   category = "Playground"
+)]
+pub async fn playwarn_context_menu(
+	ctx: Context<'_>,
+	#[description = "Message with Rust code to play as link or ID."]
+	message: Message,
+) -> Result<(), Error> {
+	play_or_eval(
+		ctx,
+		poise::KeyValueArgs::default(),
+		true,
+		extract_codeblock(message.content).expect("Has no codeblock."),
+		ResultHandling::None,
+	)
+	.await
+}
+
+/// Compile and run Rust code with warnings.
 #[poise::command(
    slash_command,
 	owners_only,
@@ -130,7 +198,32 @@ pub fn playwarn_help() -> String {
 	})
 }
 
-/// Evaluate a single Rust expression
+/// Evaluate a single Rust expression.
+#[poise::command(
+	context_menu_command = "Rust Eval Playground",
+	owners_only,
+	track_edits,
+	install_context = "User",
+	interaction_context = "Guild|BotDm|PrivateChannel",
+	help_text_fn = "eval_help",
+	category = "Playground"
+)]
+pub async fn eval_context_menu(
+	ctx: Context<'_>,
+	#[description = "Message with Rust code to play as link or ID."]
+	message: Message,
+) -> Result<(), Error> {
+	play_or_eval(
+		ctx,
+		poise::KeyValueArgs::default(),
+		false,
+		extract_codeblock(message.content).expect("Has no codeblock."),
+		ResultHandling::Print,
+	)
+	.await
+}
+
+/// Evaluate a single Rust expression.
 #[poise::command(
 	slash_command,
 	owners_only,

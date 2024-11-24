@@ -113,7 +113,8 @@ pub async fn wolfram(
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.components(vec![CreateActionRow::Buttons(vec![
-			CreateButton::new("show_all").label("Show All"),
+			CreateButton::new("show_all_private").label("Show All (Private)"),
+			CreateButton::new("show_all_public").label("Show All (Public)"),
 			CreateButton::new_link(format!(
 				"https://www.wolframalpha.com/input?i={}",
 				query
@@ -143,7 +144,11 @@ pub async fn wolfram(
 		.await
 	{
 		Some(ref interaction) => {
-			if interaction.data.custom_id == "show_all" {
+			let show_all_private =
+				interaction.data.custom_id == "show_all_private";
+			let show_all_public =
+				interaction.data.custom_id == "show_all_public";
+			if show_all_private || show_all_public {
 				interaction
 					.create_response(
 						ctx,
@@ -161,7 +166,10 @@ pub async fn wolfram(
 						followup = followup.add_embed((*embed).clone());
 					}
 					interaction
-						.create_followup(ctx, followup.ephemeral(true))
+						.create_followup(
+							ctx,
+							followup.ephemeral(show_all_private),
+						)
 						.await?;
 				}
 			}

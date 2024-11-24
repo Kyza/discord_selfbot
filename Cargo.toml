@@ -27,3 +27,4 @@ indexmap = "2.6.0"
 rand = "0.8.5"
 tracing = "0.1.40"
 syn = { version = "2.0.89", features = ["full"] }
+regex = "1.11.1"
