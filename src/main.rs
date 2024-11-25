@@ -37,6 +37,8 @@ async fn main() {
 				commands::escape(),
 				commands::roll(),
 				commands::youtube(),
+				commands::ocr(),
+				commands::bible(),
 				commands::rust_playground(), // commands::microbench(),
 				                             // commands::miri(),
 				                             // commands::expand(),

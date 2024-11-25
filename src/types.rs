@@ -9,6 +9,7 @@ pub struct Data {
 	pub http: reqwest::Client,
 	pub wolfram_alpha_full_app_id: String,
 	pub wolfram_alpha_simple_app_id: String,
+	pub deepl_key: Option<String>,
 	// pub tz: Tz,
 	// pub godbolt_metadata:
 	// 	std::sync::Mutex<commands::godbolt::GodboltMetadata>,
@@ -35,6 +36,7 @@ impl Data {
 				"WOLFRAM_ALPHA_SIMPLE_APP_ID",
 			)
 			.expect("WOLFRAM_ALPHA_SIMPLE_APP_ID is required"),
+			deepl_key: env::var("DEEPL_KEY").ok(),
 			// tz: env::var("TIMEZONE")
 			// 	.expect("TIMEZONE is required")
 			// 	.parse()

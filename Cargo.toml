@@ -28,3 +28,11 @@ rand = "0.8.5"
 tracing = "0.1.40"
 syn = { version = "2.0.89", features = ["full"] }
 regex = "1.11.1"
+inline_format = "0.2.3"
+rusty-tesseract = "1.1.10"
+image = "0.25.5"
+strip_markdown = "0.2.0"
+# kalosm = { version = "0.3.2", features = ["vision", "cuda"] }
+# ort-sys = "=2.0.0-rc.8"
+# image = "0.24.7"
+# cudarc = { version = "=0.12.1", features = ["cuda-version-from-build-system"] }

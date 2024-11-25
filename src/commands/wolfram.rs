@@ -3,6 +3,7 @@ use std::time::Duration;
 use anyhow::{anyhow, Result};
 use heck::ToTitleCase;
 use indexmap::IndexMap;
+use inline_format::{format, println};
 use poise::{
 	serenity_prelude::{
 		CreateActionRow, CreateAllowedMentions, CreateButton, CreateEmbed,
@@ -15,6 +16,21 @@ use poise::{
 const EMBED_COLOR: u32 = 0xff6600;
 
 use crate::types::Context;
+
+pub fn generate_timeouts(time: Duration) -> String {
+	format!(
+		"&scantimeout=",
+		time.as_secs(),
+		"&podtimeout=",
+		time.as_secs(),
+		"&formattimeout=",
+		time.as_secs(),
+		"&parsetimeout=",
+		time.as_secs(),
+		"&totaltimeout=",
+		time.as_secs() * 4,
+	)
+}
 
 #[derive(Debug)]
 pub enum Pod {
@@ -49,8 +65,10 @@ pub async fn wolfram(
 	let query = urlencoding::encode(&query);
 
 	let full_results_api_url = format!(
-	   "https://api.wolframalpha.com/v2/query?input={}&format=plaintext,image&output=json&async=false&units=metric&mag=2&appid={}",
+	   "https://api.wolframalpha.com/v2/query?input=",
 		query,
+		generate_timeouts(Duration::from_secs(60)),
+		"&format=plaintext,image&output=json&async=false&units=metric&mag=2&appid=",
 	   ctx.data().wolfram_alpha_full_app_id
 	);
 
@@ -80,7 +98,7 @@ pub async fn wolfram(
 
 		for (i, subpod) in subpods.iter().enumerate() {
 			let page_title = if subpods.len() > 1 {
-				format!("{title} {}", i + 1)
+				format!(title, " ", i + 1)
 			} else {
 				title.to_string()
 			}
@@ -89,16 +107,26 @@ pub async fn wolfram(
 				.color(EMBED_COLOR)
 				.title(page_title.clone());
 
+			let mut had_plaintext = false;
+			let mut had_image = false;
+
 			let plaintext = subpod["plaintext"].as_str();
 			if let Some(plaintext) = plaintext {
 				if !plaintext.is_empty() {
-					let plaintext = format!("```rs\n{}\n```", plaintext);
+					had_plaintext = true;
+					let plaintext = format!("```rs\n", plaintext, "\n```");
 					page = page.description(plaintext);
 				}
 			}
 			let image_url = subpod["img"]["src"].as_str();
 			if let Some(image_url) = image_url {
+				had_image = true;
 				page = page.image(image_url);
+			}
+
+			if !had_plaintext && !had_image {
+				page =
+					page.description("Pod didn't have any parsable content.\nView it online to see the full result.");
 			}
 
 			page_select_options.push(CreateSelectMenuOption::new(
@@ -116,7 +144,7 @@ pub async fn wolfram(
 			CreateButton::new("show_all_private").label("Show All (Private)"),
 			CreateButton::new("show_all_public").label("Show All (Public)"),
 			CreateButton::new_link(format!(
-				"https://www.wolframalpha.com/input?i={}",
+				"https://www.wolframalpha.com/input?i=",
 				query
 			))
 			.label("View Online"),

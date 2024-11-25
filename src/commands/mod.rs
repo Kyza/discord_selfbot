@@ -14,4 +14,6 @@ crunch![
 	fix,
 	youtube,
 	rust_playground,
+	ocr,
+	bible,
 ];
