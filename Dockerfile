@@ -51,7 +51,7 @@ FROM alpine:3.18 AS final
 
 USER root
 
-RUN apk add --no-cache yt-dlp yt-dlp-core ffmpeg ffmpeg-libs libwebp libwebp-tools
+RUN apk add --no-cache yt-dlp yt-dlp-core ffmpeg ffmpeg-libs libwebp libwebp-tools tesseract-ocr tesseract-ocr-data-eng
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/

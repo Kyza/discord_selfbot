@@ -23,7 +23,7 @@ pub async fn run_ocr(image: Attachment, languages: String) -> Result<String> {
 		FilterType::Lanczos3,
 	);
 
-	image.save_with_format("ocr.png", image::ImageFormat::Png)?;
+	// image.save_with_format("ocr.png", image::ImageFormat::Png)?;
 
 	let image = Image::from_dynamic_image(&image).unwrap();
 
