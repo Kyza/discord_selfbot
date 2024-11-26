@@ -55,7 +55,7 @@ pub async fn youtube(
 		"--recode-video",
 		FORMAT,
 	]);
-	let yt_dlp_output = run_os_command(yt_dlp_command)?;
+	let yt_dlp_output = run_os_command("yt-dlp", yt_dlp_command)?;
 
 	if yt_dlp_output.status.success() {
 		// Read the file.

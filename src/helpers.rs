@@ -1,5 +1,5 @@
 use std::{
-	fs,
+	fs::{self},
 	path::{Path, PathBuf},
 };
 
@@ -28,6 +28,20 @@ pub fn safe_delete(path: &PathBuf) -> Result<bool> {
 		Ok(false)
 	}
 }
+
+// pub fn wait_for_file(path: &PathBuf) -> Result<()> {
+// 	loop {
+// 		match OpenOptions::new().read(true).write(true).open(path) {
+// 			Ok(_) => return Ok(()),
+// 			Err(e) if e.kind() == ErrorKind::PermissionDenied => {
+// 				// File is still in use; wait and retry.
+// 				thread::sleep(Duration::from_millis(100));
+// 			}
+// 			// Handle other errors.
+// 			Err(e) => return Err(anyhow!(e)),
+// 		}
+// 	}
+// }
 
 /// Used for playground stdout + stderr, or godbolt asm + stderr
 /// If the return value is empty, returns " " instead, because Discord displays those better in
