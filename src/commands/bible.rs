@@ -1,11 +1,9 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use anyhow::{anyhow, Result};
-use inline_format::{format, println};
+use inline_format::format;
 use poise::{
-	serenity_prelude::{
-		Attachment, CreateAllowedMentions, CreateAttachment, Message,
-	},
+	serenity_prelude::{CreateAllowedMentions, Message},
 	CreateReply, Modal,
 };
 use regex::Regex;
@@ -62,7 +60,7 @@ pub fn analyze_text(
 	// Replace unmatched words with highlighted versions using regex
 	let highlighted_text = word_boundary
 		.replace_all(
-			&strip_markdown(&search_text),
+			&strip_markdown(search_text),
 			|caps: &regex::Captures| {
 				let word = caps[0].to_lowercase();
 				if target_words.contains(&word) {
@@ -116,7 +114,7 @@ pub async fn bible(
 		.allowed_mentions(CreateAllowedMentions::default())
 		.ephemeral(ephemeral);
 
-	let analysis = analyze_text(&message.content, &KJV_BIBLE)?;
+	let analysis = analyze_text(&message.content, KJV_BIBLE)?;
 
 	let header_text = match analysis.match_percentage {
 		100.0 => "This message is certified by The Holy Spirit.",

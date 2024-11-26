@@ -17,7 +17,7 @@ ARG APP_NAME
 WORKDIR /app
 
 # Install host build dependencies.
-RUN apk add --no-cache clang lld musl-dev git openssl openssl-dev openssl-libs-static ffmpeg yt-dlp
+RUN apk add --no-cache clang lld musl-dev git openssl openssl-dev openssl-libs-static ffmpeg yt-dlp libwebp
 
 # Build the application.
 # Leverage a cache mount to /usr/local/cargo/registry/

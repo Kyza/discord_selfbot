@@ -3,7 +3,7 @@ use std::time::Duration;
 use anyhow::{anyhow, Result};
 use heck::ToTitleCase;
 use indexmap::IndexMap;
-use inline_format::{format, println};
+use inline_format::format;
 use poise::{
 	serenity_prelude::{
 		CreateActionRow, CreateAllowedMentions, CreateButton, CreateEmbed,

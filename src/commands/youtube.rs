@@ -9,7 +9,7 @@ use poise::{
 use rand::Rng;
 use url::Url;
 
-const FORMAT: &'static str = "mp4";
+const FORMAT: &str = "mp4";
 
 /// [Experimental] Downloads a video from YouTube and sends it.
 #[poise::command(
@@ -55,7 +55,7 @@ pub async fn youtube(
 		"--recode-video",
 		FORMAT,
 	]);
-	let yt_dlp_output = run_os_command("yt-dlp", yt_dlp_command)?;
+	let yt_dlp_output = run_os_command(yt_dlp_command)?;
 
 	if yt_dlp_output.status.success() {
 		// Read the file.

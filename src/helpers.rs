@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+	fs,
+	path::{Path, PathBuf},
+};
 
 use anyhow::{anyhow, Error, Result};
 use poise::serenity_prelude as serenity;
@@ -16,6 +19,15 @@ macro_rules! crunch {
 	};
 }
 pub use crunch;
+
+pub fn safe_delete(path: &PathBuf) -> Result<bool> {
+	if fs::exists(path)? {
+		fs::remove_file(path)?;
+		Ok(true)
+	} else {
+		Ok(false)
+	}
+}
 
 /// Used for playground stdout + stderr, or godbolt asm + stderr
 /// If the return value is empty, returns " " instead, because Discord displays those better in

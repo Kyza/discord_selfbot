@@ -1,28 +1,35 @@
-use std::{
-	io::{BufRead, BufReader},
-	process::{self, Output},
-	thread,
-};
+use std::process::{self, Output};
 
 use anyhow::Result;
 
+pub fn command_to_string(cmd: &process::Command) -> String {
+	// Get the program name
+	let program = cmd.get_program().to_str().unwrap_or("unknown");
+
+	// Collect and convert arguments to strings
+	let args = cmd
+		.get_args()
+		.map(|arg| arg.to_str().unwrap_or(""))
+		.collect::<Vec<_>>()
+		.join(" ");
+
+	// Combine program and arguments
+	if args.is_empty() {
+		program.to_string()
+	} else {
+		format!("{} {}", program, args)
+	}
+}
+
 // A function that runs a command on the OS.
 // It automatically prints the output and returns the exit code.
-pub fn run_os_command(
-	tag: impl ToString,
-	mut command: process::Command,
-) -> Result<Output> {
-	let tag = tag.to_string();
-	command.stdout(process::Stdio::piped());
-	command.stderr(process::Stdio::piped());
-	let mut command_output = command.spawn()?;
-	thread::spawn(move || {
-		let reader = BufReader::new(command_output.stdout.take().unwrap());
-		for line in reader.lines() {
-			let line = line.unwrap();
-			println!("[{}] {}", tag, line);
-		}
-	});
+pub fn run_os_command(mut command: process::Command) -> Result<Output> {
+	println!("{}", command_to_string(&command));
 
-	return Ok(command.output()?);
+	command
+		// .stdout(Stdio::inherit())
+		// .stderr(Stdio::inherit())
+		.spawn()?;
+
+	Ok(command.output()?)
 }

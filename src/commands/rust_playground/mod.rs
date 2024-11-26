@@ -1,10 +1,9 @@
-use std::result;
 
 use anyhow::{anyhow, Result};
 use api::{CrateType, PlayResult, PlaygroundRequest};
 use poise::{
-	serenity_prelude::{CreateMessage, Message},
-	CreateReply, KeyValueArgs, Modal, PopArgument,
+	serenity_prelude::Message,
+	CreateReply, Modal,
 };
 use util::{
 	edit_reply, format_play_eval_stderr, get_codeblocks, maybe_wrapped,

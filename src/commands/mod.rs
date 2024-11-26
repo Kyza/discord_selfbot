@@ -16,4 +16,5 @@ crunch![
 	rust_playground,
 	ocr,
 	bible,
+	favoritize,
 ];

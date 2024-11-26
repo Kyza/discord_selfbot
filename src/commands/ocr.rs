@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use image::{imageops::FilterType, DynamicImage, GenericImageView};
-use inline_format::{format, println};
+use inline_format::format;
 use poise::{
-	serenity_prelude::{Attachment, CreateAllowedMentions, CreateAttachment},
+	serenity_prelude::{Attachment, CreateAllowedMentions},
 	CreateReply,
 };
 use rusty_tesseract::Image;
