@@ -17,4 +17,5 @@ crunch![
 	ocr,
 	bible,
 	favoritize,
+	webp,
 ];

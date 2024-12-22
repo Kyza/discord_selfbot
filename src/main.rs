@@ -42,6 +42,8 @@ async fn main() {
 				commands::rust_playground(),
 				commands::favoritize(),
 				commands::favoritize_context_menu(),
+				commands::webp(),
+				commands::webp_context_menu(),
 				// commands::microbench(),
 				// commands::miri(),
 				// commands::expand(),

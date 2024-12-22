@@ -82,6 +82,7 @@ pub fn analyze_text(
 }
 
 #[derive(Debug, Modal)]
+#[name = "Words In The Bible"]
 struct BibleModal {
 	#[placeholder = "Whether or not to show the message."]
 	ephemeral: Option<String>,

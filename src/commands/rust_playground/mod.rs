@@ -1,10 +1,6 @@
-
 use anyhow::{anyhow, Result};
 use api::{CrateType, PlayResult, PlaygroundRequest};
-use poise::{
-	serenity_prelude::Message,
-	CreateReply, Modal,
-};
+use poise::{serenity_prelude::Message, CreateReply, Modal};
 use util::{
 	edit_reply, format_play_eval_stderr, get_codeblocks, maybe_wrapped,
 	parse_flags, stub_message, ResultHandling,
@@ -61,6 +57,7 @@ async fn run_playground(
 }
 
 #[derive(Debug, Modal)]
+#[name = "Rust Playground"]
 struct PlaygroundModal {
 	#[name = "Codeblock Index"]
 	#[placeholder = "The 0-based index of the codeblock to run. If not specified, the first codeblock will be run."]

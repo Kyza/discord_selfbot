@@ -86,6 +86,7 @@ pub async fn rust_playground_context_menu(
 }
 
 #[derive(Debug, Modal)]
+#[name = "Rust Playground"]
 #[allow(dead_code)] // fields only used for Debug print
 struct PlaygroundModal {
 	first_input: String,

@@ -15,8 +15,8 @@ use poise::{
 };
 
 #[derive(Debug, Modal)]
-#[name = "Favoritize Image"]
-struct FavoritizeModal {
+#[name = "Convert To WebP"]
+struct WebPModal {
 	#[placeholder = "The attachment to use. (default: 0)"]
 	attachment_index: Option<String>,
 	#[placeholder = "Whether or not to show the message."]
@@ -72,19 +72,18 @@ impl AttachmentOrThumbnail {
 
 /// Converts any image type into a 2 frame WebP so that it can be favorited on Discord.
 #[poise::command(
-	context_menu_command = "Favoritize Image",
+	context_menu_command = "Convert To WebP",
 	owners_only,
 	track_edits,
 	install_context = "User",
 	interaction_context = "Guild|BotDm|PrivateChannel",
 	ephemeral
 )]
-pub async fn favoritize_context_menu(
+pub async fn webp_context_menu(
 	ctx: ApplicationContext<'_>,
-	#[description = "The message to turn into a favoritable image."]
-	message: Message,
+	#[description = "The message to convert to WebP."] message: Message,
 ) -> Result<()> {
-	let data = FavoritizeModal::execute(ctx)
+	let data = WebPModal::execute(ctx)
 		.await?
 		.ok_or_else(|| anyhow!("No modal data."))?;
 
@@ -111,7 +110,7 @@ pub async fn favoritize_context_menu(
 		}))
 		.collect();
 
-	// Get the attachment to turn into a favoritable image.
+	// Get the attachment to convert to WebP.
 	let attachment_index = match data.attachment_index.as_deref() {
 		Some(attachment_index) => attachment_index.parse::<usize>()?,
 		None => 0,
@@ -153,10 +152,9 @@ pub async fn favoritize_context_menu(
 	interaction_context = "Guild|BotDm|PrivateChannel",
 	ephemeral
 )]
-pub async fn favoritize(
+pub async fn webp(
 	ctx: Context<'_>,
-	#[description = "The image to turn into a favoritable image."]
-	attachment: Attachment,
+	#[description = "The image to convert to WebP."] attachment: Attachment,
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
@@ -195,86 +193,70 @@ pub async fn convert_to_animated_webp(
 	let image_path_template = env::temp_dir();
 	let image_input = image_path_template.join(attachment_name);
 	let mut image_output = image_path_template.join(attachment_name);
+	let is_gif = attachment.filename().ends_with(".gif");
 	image_output.set_extension("webp");
 
 	fs::write(&image_input, attachment.download(&client).await?)?;
 
-	// img2webp -near_lossless 100 -sharp_yuv -v -loop 0 input.png -d 1 -lossless -q 100 -m 6 -o output.webp
+	let output = match is_gif {
+		true => {
+			let mut gif2webp_command = process::Command::new("gif2webp");
+			gif2webp_command.args([
+				"-v",
+				image_input.to_str().unwrap(),
+				"-mixed",
+				"-mt",
+				"-m",
+				"6",
+				"-o",
+				image_output.to_str().unwrap(),
+			]);
+			let gif2webp_output =
+				run_os_command("gif2webp", gif2webp_command)?;
 
-	// First, convert the image to a WebP with the best quality possible.
-	let mut img2webp_command = process::Command::new("img2webp");
-	img2webp_command.args([
-		"-v",
-		"-sharp_yuv",
-		"-loop",
-		"0",
-		image_input.to_str().unwrap(),
-		"-d",
-		"1",
-		"-lossless",
-		"-q",
-		"100",
-		"-m",
-		"6",
-		"-o",
-		image_output.to_str().unwrap(),
-	]);
-	let img2webp_output = run_os_command("img2webp", img2webp_command)?;
+			gif2webp_output
+		}
+		false => {
+			let mut img2webp_command = process::Command::new("img2webp");
+			img2webp_command.args([
+				"-v",
+				"-sharp_yuv",
+				image_input.to_str().unwrap(),
+				"-lossless",
+				"-m",
+				"6",
+				"-o",
+				image_output.to_str().unwrap(),
+			]);
+			let img2webp_output =
+				run_os_command("img2webp", img2webp_command)?;
 
-	if !img2webp_output.status.success() {
+			img2webp_output
+		}
+	};
+
+	if !output.status.success() {
 		// Delete the files.
 		safe_delete(&image_input)?;
 		safe_delete(&image_output)?;
 
 		return Err(anyhow!(
 			"```\n{}\n```",
-			String::from_utf8_lossy(&img2webp_output.stderr)
+			String::from_utf8_lossy(&output.stderr)
 		));
 	}
 
-	// webpmux -frame output.webp +0+0+0+1 -frame output.webp +0+0+0+1 -loop 0 -o output.webp
+	let data = fs::read(&image_output)?;
 
-	// Then convert that one WebP into another WebP with two duplicate frames.
-	// This should overwrite itself.
-	// The -loop 1 flag is important to prevent the WebP from looping infinitely.
-	let mut webpmux_command = process::Command::new("webpmux");
-	webpmux_command.args([
-		"-frame",
-		image_output.to_str().unwrap(),
-		"+0+0+0+1",
-		"-frame",
-		image_output.to_str().unwrap(),
-		"+0+0+0+1",
-		"-loop",
-		"1",
-		"-o",
-		image_output.to_str().unwrap(),
-	]);
-	let webpmux_output = run_os_command("webpmux", webpmux_command)?;
+	safe_delete(&image_input)?;
+	safe_delete(&image_output)?;
 
-	if webpmux_output.status.success() {
-		let data = fs::read(&image_output)?;
-
-		// Delete the files.
-		safe_delete(&image_input)?;
-		safe_delete(&image_output)?;
-
-		Ok((
-			data,
-			image_output
-				.file_name()
-				.unwrap()
-				.to_string_lossy()
-				.to_string(),
-		))
-	} else {
-		// Delete the files.
-		safe_delete(&image_input)?;
-		safe_delete(&image_output)?;
-
-		Err(anyhow!(
-			"```\n{}\n```",
-			String::from_utf8_lossy(&webpmux_output.stderr)
-		))
-	}
+	Ok((
+		data,
+		image_output
+			.file_name()
+			.unwrap()
+			.to_string_lossy()
+			.to_string(),
+	))
 }
