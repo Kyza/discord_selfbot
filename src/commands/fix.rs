@@ -39,13 +39,13 @@ impl TikTokView {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, ChoiceParameter)]
-enum XView {
+enum XBSkyView {
 	Default,
 	Gallery,
 	Text,
 	Direct,
 }
-impl XView {
+impl XBSkyView {
 	fn to_subdomain(self) -> &'static str {
 		match self {
 			Self::Default => "",
@@ -74,16 +74,18 @@ pub async fn fix(
 	#[description = "[TikTok] Which view to use."] tiktok_view: Option<
 		TikTokView,
 	>,
-	#[description = "[X] Which view to use."] x_view: Option<XView>,
-	#[description = "[X] The 2 letter language code to translate to."]
-	x_language: Option<String>,
+	#[description = "[X/BSky] Which view to use."] x_bsky_view: Option<
+		XBSkyView,
+	>,
+	#[description = "[X/BSky] The 2 letter language code to translate to."]
+	x_bsky_language: Option<String>,
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
 ) -> Result<()> {
 	let instagram_view = instagram_view.unwrap_or(InstagramView::Default);
 	let tiktok_view = tiktok_view.unwrap_or(TikTokView::Default);
-	let x_view = x_view.unwrap_or(XView::Default);
+	let x_bsky_view = x_bsky_view.unwrap_or(XBSkyView::Default);
 	let ephemeral = ephemeral.unwrap_or(false);
 	if ephemeral {
 		ctx.defer_ephemeral().await?;
@@ -129,12 +131,31 @@ pub async fn fix(
 			let mut new_url = url.clone();
 			new_url.set_host(Some(&format!(
 				"{}fixupx.com",
-				x_view.to_subdomain()
+				x_bsky_view.to_subdomain()
 			)))?;
 			new_url.set_path(&format!(
 				"{}{}",
 				new_url.path(),
-				if let Some(language) = x_language {
+				if let Some(language) = x_bsky_language {
+					format!("/{}", language)
+				} else {
+					"".to_string()
+				}
+			));
+			new_url.set_query(None);
+			ctx.send(reply.content(new_url)).await?;
+		}
+		Some(Host::Domain("www.bsky.app"))
+		| Some(Host::Domain("bsky.app")) => {
+			let mut new_url = url.clone();
+			new_url.set_host(Some(&format!(
+				"{}fxbsky.app",
+				x_bsky_view.to_subdomain()
+			)))?;
+			new_url.set_path(&format!(
+				"{}{}",
+				new_url.path(),
+				if let Some(language) = x_bsky_language {
 					format!("/{}", language)
 				} else {
 					"".to_string()
