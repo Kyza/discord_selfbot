@@ -44,6 +44,7 @@ async fn main() {
 				commands::favoritize_context_menu(),
 				commands::webp(),
 				commands::webp_context_menu(),
+				commands::ffmpeg(),
 				// commands::microbench(),
 				// commands::miri(),
 				// commands::expand(),

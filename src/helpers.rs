@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Error, Result};
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, Attachment, EmbedThumbnail};
 use reqwest::header;
 
 use crate::types::{Context, Data};
@@ -14,6 +14,7 @@ macro_rules! crunch {
 	($($name:ident),* $(,)?) => {
 		$(
 			mod $name;
+			#[allow(ambiguous_glob_reexports)]
 			pub use $name::*;
 		)*
 	};
@@ -26,6 +27,56 @@ pub fn safe_delete(path: &PathBuf) -> Result<bool> {
 		Ok(true)
 	} else {
 		Ok(false)
+	}
+}
+
+#[derive(Debug)]
+pub enum AttachmentOrThumbnail {
+	Attachment(Attachment),
+	Embed(EmbedThumbnail),
+}
+impl AttachmentOrThumbnail {
+	pub async fn download(
+		&self,
+		client: &reqwest::Client,
+	) -> Result<Vec<u8>> {
+		match self {
+			AttachmentOrThumbnail::Attachment(a) => Ok(a.download().await?),
+			AttachmentOrThumbnail::Embed(e) => {
+				// Download the image from the proxy URL.
+				let url = e.proxy_url.as_ref().ok_or_else(|| {
+					anyhow!("Embed thumbnail has no proxy URL")
+				})?;
+				let request = client.get(url).send().await?;
+				Ok(request.bytes().await?.to_vec())
+			}
+		}
+	}
+
+	pub fn filename(&self) -> String {
+		match self {
+			AttachmentOrThumbnail::Attachment(a) => a.filename.clone(),
+			AttachmentOrThumbnail::Embed(e) => {
+				// Parse the URL to get the filename.
+				let url = &e.proxy_url;
+				let url = if let Some(url) = url {
+					url::Url::parse(&url).unwrap_or_else(|_| {
+						url::Url::parse("https://example.com/thumbnail.png")
+							.unwrap()
+					})
+				} else {
+					return "thumbnail.png".to_string();
+				};
+				if let Some(path_segments) = url.path_segments() {
+					let filename = path_segments
+						.last()
+						.unwrap_or_else(|| "thumbnail.png");
+					filename.to_string()
+				} else {
+					"thumbnail.png".to_string()
+				}
+			}
+		}
 	}
 }
 

@@ -1,15 +1,14 @@
 use std::{env, fs, process};
 
 use crate::{
-	helpers::safe_delete,
+	helpers::{safe_delete, AttachmentOrThumbnail},
 	os_command::run_os_command,
 	types::{ApplicationContext, Context},
 };
 use anyhow::{anyhow, Result};
 use poise::{
 	serenity_prelude::{
-		Attachment, CreateAllowedMentions, CreateAttachment, EmbedThumbnail,
-		Message,
+		Attachment, CreateAllowedMentions, CreateAttachment, Message,
 	},
 	CreateReply, Modal,
 };
@@ -21,53 +20,6 @@ struct FavoritizeModal {
 	attachment_index: Option<String>,
 	#[placeholder = "Whether or not to show the message."]
 	ephemeral: Option<String>,
-}
-
-#[derive(Debug)]
-pub enum AttachmentOrThumbnail {
-	Attachment(Attachment),
-	Embed(EmbedThumbnail),
-}
-impl AttachmentOrThumbnail {
-	async fn download(&self, client: &reqwest::Client) -> Result<Vec<u8>> {
-		match self {
-			AttachmentOrThumbnail::Attachment(a) => Ok(a.download().await?),
-			AttachmentOrThumbnail::Embed(e) => {
-				// Download the image from the proxy URL.
-				let url = e.proxy_url.as_ref().ok_or_else(|| {
-					anyhow!("Embed thumbnail has no proxy URL")
-				})?;
-				let request = client.get(url).send().await?;
-				Ok(request.bytes().await?.to_vec())
-			}
-		}
-	}
-
-	fn filename(&self) -> String {
-		match self {
-			AttachmentOrThumbnail::Attachment(a) => a.filename.clone(),
-			AttachmentOrThumbnail::Embed(e) => {
-				// Parse the URL to get the filename.
-				let url = &e.proxy_url;
-				let url = if let Some(url) = url {
-					url::Url::parse(&url).unwrap_or_else(|_| {
-						url::Url::parse("https://example.com/thumbnail.png")
-							.unwrap()
-					})
-				} else {
-					return "thumbnail.png".to_string();
-				};
-				if let Some(path_segments) = url.path_segments() {
-					let filename = path_segments
-						.last()
-						.unwrap_or_else(|| "thumbnail.png");
-					filename.to_string()
-				} else {
-					"thumbnail.png".to_string()
-				}
-			}
-		}
-	}
 }
 
 /// Converts any image type into a 2 frame WebP so that it can be favorited on Discord.

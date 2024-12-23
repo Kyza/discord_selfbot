@@ -18,4 +18,5 @@ crunch![
 	bible,
 	favoritize,
 	webp,
+	ffmpeg,
 ];
