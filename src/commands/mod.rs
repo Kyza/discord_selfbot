@@ -19,4 +19,5 @@ crunch![
 	favoritize,
 	webp,
 	ffmpeg,
+	translate,
 ];

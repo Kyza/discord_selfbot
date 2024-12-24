@@ -10,6 +10,7 @@ pub struct Data {
 	pub wolfram_alpha_full_app_id: String,
 	pub wolfram_alpha_simple_app_id: String,
 	pub deepl_key: Option<String>,
+	pub deepl_target_language: String,
 	// pub tz: Tz,
 	// pub godbolt_metadata:
 	// 	std::sync::Mutex<commands::godbolt::GodboltMetadata>,
@@ -37,6 +38,8 @@ impl Data {
 			)
 			.expect("WOLFRAM_ALPHA_SIMPLE_APP_ID is required"),
 			deepl_key: env::var("DEEPL_KEY").ok(),
+			deepl_target_language: env::var("DEEPL_TARGET_LANGUAGE")
+				.expect("DEEPL_TARGET_LANGUAGE is required"),
 			// tz: env::var("TIMEZONE")
 			// 	.expect("TIMEZONE is required")
 			// 	.parse()
