@@ -385,10 +385,15 @@ pub async fn translate_text(
 	);
 	println!("URL: ", url:?);
 
-	let url_regex = Regex::new(r"https:\/\/www\.deepl\.com\/.+\/translator(?:#(?<from>.+))?\/(?<to>.+)\/.*").unwrap();
+	let url_regex = Regex::new(
+		r"https:\/\/www\.deepl\.com\/translator(?:#(?<from>.+))?\/(?<to>.+)\/.*",
+	)
+	.unwrap();
 	// Print the URL.
 	// Get the data.
-	let captures = url_regex.captures(url.as_str())?.unwrap();
+	let captures = url_regex
+		.captures(url.as_str())?
+		.ok_or_else(|| anyhow!("Failed to get data from the URL."))?;
 
 	// let result_target_language = captures
 	// 	.name("to")
