@@ -1,5 +1,6 @@
 use std::time::Duration;
 use thirtyfour::prelude::*;
+use url::Url;
 
 use crate::types::{ApplicationContext, Context};
 use anyhow::{anyhow, Result};
@@ -174,17 +175,7 @@ pub async fn translate_context_menu(
 	.await?;
 
 	reply = reply.components(vec![CreateActionRow::Buttons(vec![
-		CreateButton::new_link(format!(
-			"https://www.deepl.com/",
-			translation_result.target_language,
-			"/translator#",
-			translation_result.source_language,
-			"/",
-			translation_result.target_language,
-			"/",
-			urlencoding::encode(&content)
-		))
-		.label("View Online"),
+		CreateButton::new_link(translation_result.url).label("View Online"),
 	])]);
 	reply = reply.content(translation_result.translated_text);
 
@@ -253,17 +244,7 @@ pub async fn translate(
 	.await?;
 
 	reply = reply.components(vec![CreateActionRow::Buttons(vec![
-		CreateButton::new_link(format!(
-			"https://www.deepl.com/",
-			translation_result.target_language,
-			"/translator#",
-			translation_result.source_language,
-			"/",
-			translation_result.target_language,
-			"/",
-			urlencoding::encode(&text)
-		))
-		.label("View Online"),
+		CreateButton::new_link(translation_result.url).label("View Online"),
 	])]);
 	reply = reply.content(translation_result.translated_text);
 
@@ -292,8 +273,10 @@ pub async fn wait_for_element(
 
 pub struct TranslationResult {
 	pub translated_text: String,
+	pub url: Url,
 	pub source_language: String,
 	pub target_language: String,
+	pub auto_detected_source_language: bool,
 }
 
 pub async fn translate_text(
@@ -392,38 +375,43 @@ pub async fn translate_text(
 
 	// Get selected language.
 	println!(starting_url);
-	println!(driver.current_url().await?.as_str());
 	while driver.current_url().await?.as_str() == starting_url {
 		tokio::time::sleep(Duration::from_millis(10)).await;
 	}
-	let url = driver.current_url().await?;
+	let mut url = driver.current_url().await?;
+	// Remove the first segment of the URL if it's not "translator/".
+	url.set_path(
+		&url.path().split('/').skip(2).collect::<Vec<_>>().join("/"),
+	);
+	println!("URL: ", url:?);
+
 	let url_regex = Regex::new(r"https:\/\/www\.deepl\.com\/.+\/translator(?:#(?<from>.+))?\/(?<to>.+)\/.*").unwrap();
 	// Print the URL.
 	// Get the data.
 	let captures = url_regex.captures(url.as_str())?.unwrap();
 
-	let result_target_language = captures
-		.name("to")
-		.ok_or_else(|| anyhow!("Could not find the to language."))?
-		.as_str()
-		.to_string();
+	// let result_target_language = captures
+	// 	.name("to")
+	// 	.ok_or_else(|| anyhow!("Could not find the to language."))?
+	// 	.as_str()
+	// 	.to_string();
 	let result_source_language = captures
 		.name("from")
 		.ok_or_else(|| anyhow!("Could not find the from language."))?
 		.as_str()
 		.to_string();
 
-	println!(
-		"You provided `",
-		source_language,
-		"` to `",
-		target_language,
-		"`.\nThe languages it used were `",
-		result_source_language.clone(),
-		"` to `",
-		result_target_language,
-		"`."
-	);
+	// println!(
+	// 	"You provided `",
+	// 	source_language,
+	// 	"` to `",
+	// 	target_language,
+	// 	"`.\nThe languages it used were `",
+	// 	result_source_language.clone(),
+	// 	"` to `",
+	// 	result_target_language,
+	// 	"`."
+	// );
 
 	// Test if the previously set language is the same as the current one.
 	// data-testid="translator-target-lang"
@@ -455,8 +443,10 @@ pub async fn translate_text(
 
 	Ok(TranslationResult {
 		translated_text,
+		url,
 		source_language: result_source_language,
-		target_language: result_target_language,
+		target_language: current_target_language,
+		auto_detected_source_language: current_source_language == "auto",
 	})
 }
 
