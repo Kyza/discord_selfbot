@@ -6,7 +6,7 @@
 
 # Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
 
-ARG RUST_VERSION=1.81.0
+ARG RUST_VERSION=1.83.0
 ARG APP_NAME=discord_selfbot
 
 ################################################################################

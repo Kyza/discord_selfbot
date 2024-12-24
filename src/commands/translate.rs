@@ -386,37 +386,25 @@ pub async fn translate_text(
 	println!("URL: ", url:?);
 
 	let url_regex = Regex::new(
-		r"https:\/\/www\.deepl\.com\/translator(?:#(?<from>.+))?\/(?<to>.+)\/.*",
+		r"https:\/\/www\.deepl\.com\/translator(?:#(?<source>.+))?\/(?<target>.+)\/.*",
 	)
 	.unwrap();
-	// Print the URL.
 	// Get the data.
 	let captures = url_regex
 		.captures(url.as_str())?
 		.ok_or_else(|| anyhow!("Failed to get data from the URL."))?;
 
 	// let result_target_language = captures
-	// 	.name("to")
-	// 	.ok_or_else(|| anyhow!("Could not find the to language."))?
+	// 	.name("target")
+	// 	.ok_or_else(|| anyhow!("Could not find the target language."))?
 	// 	.as_str()
 	// 	.to_string();
 	let result_source_language = captures
-		.name("from")
-		.ok_or_else(|| anyhow!("Could not find the from language."))?
+		.name("source")
+		.ok_or_else(|| anyhow!("Could not find the source language."))?
 		.as_str()
-		.to_string();
-
-	// println!(
-	// 	"You provided `",
-	// 	source_language,
-	// 	"` to `",
-	// 	target_language,
-	// 	"`.\nThe languages it used were `",
-	// 	result_source_language.clone(),
-	// 	"` to `",
-	// 	result_target_language,
-	// 	"`."
-	// );
+		.to_string()
+		.to_lowercase();
 
 	// Test if the previously set language is the same as the current one.
 	// data-testid="translator-target-lang"
@@ -430,11 +418,13 @@ pub async fn translate_text(
 	let current_target_language = target_lang_element
 		.attr("dl-selected-lang")
 		.await?
-		.unwrap_or("unknown".to_string());
+		.unwrap_or("unknown".to_string())
+		.to_lowercase();
 	let current_source_language = source_lang_element
 		.attr("dl-selected-lang")
 		.await?
-		.unwrap_or("auto".to_string());
+		.unwrap_or("auto".to_string())
+		.to_lowercase();
 
 	println!("Tried source language:   ", attempted_source_language);
 	println!("Tried target language:   ", attempted_target_language);
