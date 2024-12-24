@@ -8,7 +8,7 @@ use poise::{
 	serenity_prelude::{
 		CreateActionRow, CreateAllowedMentions, CreateButton, CreateEmbed,
 		CreateInteractionResponse, CreateInteractionResponseFollowup,
-		CreateSelectMenuOption,
+		CreateSelectMenuOption, Mentionable,
 	},
 	CreateReply,
 };
@@ -152,18 +152,34 @@ pub async fn wolfram(
 		.ephemeral(ephemeral);
 
 	page_map.shift_remove("Input");
+	let mut added_embed = false;
 	if let Some(embed) = page_map.get("Input Interpretation") {
 		reply = reply.embed(embed.clone());
 		page_map.shift_remove("Input Interpretation");
+		added_embed = true;
 	}
 	if let Some(embed) = page_map.get("Result") {
 		reply = reply.embed(embed.clone());
 		page_map.shift_remove("Result");
+		added_embed = true;
+	}
+	// As a backup, add the first embed.
+	if !added_embed {
+		// If the default embed wasn't added, add the first one.
+		if let Some(embed) = page_map.values().next() {
+			reply = reply.embed(embed.clone());
+			// Remove the first embed from the map.
+			if let Some(first_key) = page_map.keys().next().cloned() {
+				page_map.shift_remove(&first_key);
+			}
+		}
 	}
 
 	let message = ctx.send(reply.clone()).await?;
 
-	while match message
+	let mut responded_publicly = false;
+
+	'interaction_loop: while match message
 		.message()
 		.await
 		.unwrap()
@@ -176,6 +192,29 @@ pub async fn wolfram(
 				interaction.data.custom_id == "show_all_private";
 			let show_all_public =
 				interaction.data.custom_id == "show_all_public";
+
+			// If already responded to the public, don't respond again.
+			if show_all_public && responded_publicly {
+				interaction
+					.create_response(
+						ctx,
+						CreateInteractionResponse::Acknowledge,
+					)
+					.await?;
+
+				let mut followup = CreateInteractionResponseFollowup::new();
+				followup =
+					followup.content("There has already been a public response.\nIf it was deleted, use the private response or view the results online.");
+				interaction
+					.create_followup(ctx, followup.ephemeral(true))
+					.await?;
+
+				continue 'interaction_loop;
+			}
+			if show_all_public {
+				responded_publicly = true;
+			}
+
 			if show_all_private || show_all_public {
 				interaction
 					.create_response(
@@ -183,6 +222,7 @@ pub async fn wolfram(
 						CreateInteractionResponse::Acknowledge,
 					)
 					.await?;
+
 				let next = page_map.clone();
 				let next = next.values();
 				let next = next.collect::<Vec<&CreateEmbed>>();
@@ -190,6 +230,10 @@ pub async fn wolfram(
 				for chunk in chunks {
 					let mut followup =
 						CreateInteractionResponseFollowup::new();
+					if show_all_public {
+						followup = followup
+							.content(interaction.user.mention().to_string());
+					}
 					for embed in chunk {
 						followup = followup.add_embed((*embed).clone());
 					}
