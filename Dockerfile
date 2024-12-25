@@ -51,13 +51,8 @@ FROM alpine:3.21 AS final
 
 USER root
 
-RUN echo -e '#!/bin/bash\nsudo firefox "$@"' > /usr/local/bin/sudo_firefox.sh \
-    && chmod +x /usr/local/bin/sudo_firefox.sh
-
 # Install runtime dependencies.
 RUN apk add --no-cache yt-dlp yt-dlp-core ffmpeg ffmpeg-libs libwebp libwebp-tools tesseract-ocr tesseract-ocr-data-eng geckodriver firefox sudo
-
-CMD geckodriver &
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/

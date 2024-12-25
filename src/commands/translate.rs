@@ -123,8 +123,6 @@ struct TranslateModal {
 	#[name = "Source Language"]
 	#[placeholder = "The language to translate from. (default: detect)"]
 	source_language: Option<String>,
-	#[placeholder = "Whether or not to run Firefox in headless mode."]
-	headless: Option<String>,
 	#[placeholder = "Whether or not to show the message."]
 	ephemeral: Option<String>,
 }
@@ -151,11 +149,6 @@ pub async fn translate_context_menu(
 		Some(_) => true,
 		None => false,
 	};
-	let headless = match data.headless.as_deref() {
-		Some("false") => false,
-		Some(_) => true,
-		None => true,
-	};
 
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
@@ -170,7 +163,6 @@ pub async fn translate_context_menu(
 		&data
 			.target_language
 			.unwrap_or(ctx.data().deepl_target_language.clone()),
-		headless,
 	)
 	.await?;
 
@@ -216,8 +208,6 @@ pub async fn translate(
 	source_language: Option<String>,
 	#[description = "The target language code to translate to."]
 	target_language: Option<String>,
-	#[description = "Whether or not to run Firefox in headless mode."]
-	headless: Option<bool>,
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
@@ -229,8 +219,6 @@ pub async fn translate(
 		ctx.defer().await?;
 	}
 
-	let headless = headless.unwrap_or(true);
-
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.ephemeral(ephemeral);
@@ -239,7 +227,6 @@ pub async fn translate(
 		&text,
 		&source_language.unwrap_or("auto".to_string()),
 		&target_language.unwrap_or(ctx.data().deepl_target_language.clone()),
-		headless,
 	)
 	.await?;
 
@@ -283,12 +270,13 @@ pub async fn translate_text(
 	text: &String,
 	source_language: &String,
 	target_language: &String,
-	headless: bool,
 ) -> Result<TranslationResult> {
 	println!("Starting Firefox.");
 
 	let mut caps = DesiredCapabilities::firefox();
-	if headless {
+	// If in debug mode, run non-headless.
+	// Look at him he has Smitty Werbenjägermanjensen's hat.
+	if !cfg!(debug_assertions) {
 		caps.set_headless()?;
 	}
 	// caps.set_log_level(LogLevel::Trace)?;
