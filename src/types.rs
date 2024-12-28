@@ -1,58 +1,53 @@
 use anyhow::Error;
 use poise::serenity_prelude as serenity;
-use std::env;
+use serde::{Deserialize, Serialize};
+use std::{collections::HashSet, fs};
 
 #[derive(Debug)]
-pub struct Data {
-	pub application_id: serenity::UserId,
-	pub bot_start_time: std::time::Instant,
+pub struct BotData {
+	pub config: Config,
 	pub http: reqwest::Client,
-	pub wolfram_alpha_full_app_id: String,
-	pub wolfram_alpha_simple_app_id: String,
-	pub deepl_key: Option<String>,
-	pub deepl_target_language: String,
-	// pub tz: Tz,
-	// pub godbolt_metadata:
-	// 	std::sync::Mutex<commands::godbolt::GodboltMetadata>,
+	pub bot_start_time: std::time::Instant,
 }
-
-impl Default for Data {
-	fn default() -> Self {
-		Self::new()
-	}
-}
-
-impl Data {
+impl BotData {
 	pub fn new() -> Self {
+		let config = Config::new();
+		let http = reqwest::Client::new();
+		let bot_start_time = std::time::Instant::now();
 		Self {
-			application_id: env::var("APPLICATION_ID")
-				.expect("APPLICATION_ID is required")
-				.parse()
-				.expect("APPLICATION_ID is not a valid ID"),
-			bot_start_time: std::time::Instant::now(),
-			http: reqwest::Client::new(),
-			wolfram_alpha_full_app_id: env::var("WOLFRAM_ALPHA_FULL_APP_ID")
-				.expect("WOLFRAM_ALPHA_FULL_APP_ID is required"),
-			wolfram_alpha_simple_app_id: env::var(
-				"WOLFRAM_ALPHA_SIMPLE_APP_ID",
-			)
-			.expect("WOLFRAM_ALPHA_SIMPLE_APP_ID is required"),
-			deepl_key: env::var("DEEPL_KEY").ok(),
-			deepl_target_language: env::var("DEEPL_TARGET_LANGUAGE")
-				.expect("DEEPL_TARGET_LANGUAGE is required"),
-			// tz: env::var("TIMEZONE")
-			// 	.expect("TIMEZONE is required")
-			// 	.parse()
-			// 	.expect("TIMEZONE is invalid"),
-			// godbolt_metadata: std::sync::Mutex::new(
-			// 	commands::godbolt::GodboltMetadata::default(),
-			// ),
+			config,
+			http,
+			bot_start_time,
 		}
 	}
 }
 
-pub type Context<'a> = poise::Context<'a, Data, Error>;
-pub type ApplicationContext<'a> = poise::ApplicationContext<'a, Data, Error>;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Config {
+	pub discord_token: String,
+	pub owner_ids: HashSet<serenity::UserId>,
+	pub application_id: serenity::UserId,
+	pub wolfram_alpha_full_app_id: String,
+	// pub wolfram_alpha_simple_app_id: String,
+	// pub wolfram_alpha_short_app_id: String,
+	pub deepl_target_language: String,
+	pub timezone: String,
+}
+impl Default for Config {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+impl Config {
+	pub fn new() -> Self {
+		let config_string = fs::read_to_string("config.ron").unwrap();
+		ron::from_str(&config_string).unwrap()
+	}
+}
+
+pub type Context<'a> = poise::Context<'a, BotData, Error>;
+pub type ApplicationContext<'a> =
+	poise::ApplicationContext<'a, BotData, Error>;
 
 // const EMBED_COLOR: (u8, u8, u8) = (0xf7, 0x4c, 0x00);
 pub const EMBED_COLOR: (u8, u8, u8) = (0x7b, 0xbe, 0x17);

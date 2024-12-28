@@ -7,7 +7,7 @@ use anyhow::{anyhow, Error, Result};
 use poise::serenity_prelude::{self as serenity, Attachment, EmbedThumbnail};
 use reqwest::header;
 
-use crate::types::{Context, Data};
+use crate::types::{BotData, Context};
 
 #[macro_export]
 macro_rules! crunch {
@@ -112,7 +112,9 @@ pub fn merge_output_and_errors<'a>(
 
 /// In prefix commands, react with a red cross emoji. In slash commands, respond with a short
 /// explanation.
-pub async fn acknowledge_fail(error: poise::FrameworkError<'_, Data, Error>) {
+pub async fn acknowledge_fail(
+	error: poise::FrameworkError<'_, BotData, Error>,
+) {
 	if let poise::FrameworkError::Command { error, ctx, .. } = error {
 		log::warn!("Reacting with red cross because of error: {}", error);
 

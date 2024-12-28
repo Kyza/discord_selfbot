@@ -1,10 +1,5 @@
-#[macro_use]
-extern crate maplit;
-
-use std::env;
-
 use poise::serenity_prelude as serenity;
-use types::Data;
+use types::{BotData, Config};
 
 pub mod commands;
 pub mod helpers;
@@ -13,15 +8,14 @@ pub mod media;
 pub mod os_command;
 pub mod types;
 
-#[dotenvy::load]
 #[tokio::main]
 async fn main() {
-	let token = env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN is required");
+	let config = Config::new();
 	let intents = serenity::GatewayIntents::non_privileged();
 
 	let framework = poise::Framework::builder()
 		.options(poise::FrameworkOptions {
-			owners: hashset! { serenity::UserId::new(220584715265114113) },
+			owners: config.owner_ids.clone(),
 			commands: vec![
 				commands::age(),
 				commands::github(),
@@ -68,13 +62,14 @@ async fn main() {
 					&framework.options().commands,
 				)
 				.await?;
-				Ok(Data::new())
+				Ok(BotData::new())
 			})
 		})
 		.build();
 
-	let client = serenity::ClientBuilder::new(token, intents)
-		.framework(framework)
-		.await;
+	let client =
+		serenity::ClientBuilder::new(config.discord_token.clone(), intents)
+			.framework(framework)
+			.await;
 	client.unwrap().start().await.unwrap();
 }

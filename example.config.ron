@@ -1,0 +1,10 @@
+Config(
+	discord_token: "",
+	owner_ids: [
+		UserId(220584715265114113)
+	],
+	application_id: UserId(1270212113272410203),
+	wolfram_alpha_full_app_id: "",
+	deepl_target_language: "English",
+	timezone: "America/New_York",
+)

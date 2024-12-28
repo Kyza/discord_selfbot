@@ -162,7 +162,7 @@ pub async fn translate_context_menu(
 		&data.source_language.unwrap_or("auto".to_string()),
 		&data
 			.target_language
-			.unwrap_or(ctx.data().deepl_target_language.clone()),
+			.unwrap_or(ctx.data().config.deepl_target_language.clone()),
 	)
 	.await?;
 
@@ -226,7 +226,8 @@ pub async fn translate(
 	let translation_result = translate_text(
 		&text,
 		&source_language.unwrap_or("auto".to_string()),
-		&target_language.unwrap_or(ctx.data().deepl_target_language.clone()),
+		&target_language
+			.unwrap_or(ctx.data().config.deepl_target_language.clone()),
 	)
 	.await?;
 

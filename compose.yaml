@@ -8,32 +8,32 @@
 # database or a cache. For examples, see the Awesome Compose repository:
 # https://github.com/docker/awesome-compose
 services:
-  discord_selfbot:
-    restart: always
-    volumes:
-      - ./.env:/.env
-    build:
-      context: .
-      target: final
+   discord_selfbot:
+      restart: always
+      volumes:
+         - ./config.ron:/config.ron
+      build:
+         context: .
+         target: final
 
-  # cobalt-api:
-  #     image: ghcr.io/imputnet/cobalt:10
+   # cobalt-api:
+   #     image: ghcr.io/imputnet/cobalt:10
 
-  #     init: true
-  #     read_only: true
-  #     restart: unless-stopped
-  #     container_name: cobalt-api
+   #     init: true
+   #     read_only: true
+   #     restart: unless-stopped
+   #     container_name: cobalt-api
 
-  #     ports:
-  #         - 9000:9000/tcp
-  #         # if you use a reverse proxy (such as nginx),
-  #         # uncomment the next line and remove the one above (9000:9000/tcp):
-  #         # - 127.0.0.1:9000:9000
+   #     ports:
+   #         - 9000:9000/tcp
+   #         # if you use a reverse proxy (such as nginx),
+   #         # uncomment the next line and remove the one above (9000:9000/tcp):
+   #         # - 127.0.0.1:9000:9000
 
-  #     environment:
-  #         # replace https://api.url.example/ with your instance's url
-  #         # or else tunneling functionality won't work properly
-  #         API_URL: "https://localhost/"
+   #     environment:
+   #         # replace https://api.url.example/ with your instance's url
+   #         # or else tunneling functionality won't work properly
+   #         API_URL: "https://localhost/"
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
 # start the database before your application. The `db-data` volume persists the
@@ -66,4 +66,3 @@ services:
 # secrets:
 #   db-password:
 #     file: db/password.txt
-

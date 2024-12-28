@@ -4,11 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dotenvy = { git = "https://github.com/allan2/dotenvy", rev = "db0d6aa", features = [
-	"macros",
-] }
 log = "0.4.22"
-maplit = "1.0.2"
 poise = { git = "https://github.com/serenity-rs/poise", rev = "22b5b01" }
 reqwest = { version = "0.12.8", features = ["json"] }
 serde = "1.0.210"
@@ -34,6 +30,7 @@ image = "0.25.5"
 strip_markdown = "0.2.0"
 thirtyfour = "0.35.0"
 fancy-regex = "0.14.0"
+ron = "0.8.1"
 # kalosm = { version = "0.3.2", features = ["vision", "cuda"] }
 # ort-sys = "=2.0.0-rc.8"
 # image = "0.24.7"

@@ -69,7 +69,7 @@ pub async fn wolfram(
 		query,
 		generate_timeouts(Duration::from_secs(60)),
 		"&format=plaintext,image&output=json&async=false&units=metric&mag=2&appid=",
-	   ctx.data().wolfram_alpha_full_app_id
+	   ctx.data().config.wolfram_alpha_full_app_id
 	);
 
 	let full_response =
