@@ -38,7 +38,7 @@ pub enum Pod {
 	Image(String),
 }
 
-/// Queries Wolfram Alpha.
+/// Asks Wolfram Alpha a question.
 #[poise::command(
 	owners_only,
 	track_edits,

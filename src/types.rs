@@ -48,6 +48,3 @@ impl Config {
 pub type Context<'a> = poise::Context<'a, BotData, Error>;
 pub type ApplicationContext<'a> =
 	poise::ApplicationContext<'a, BotData, Error>;
-
-// const EMBED_COLOR: (u8, u8, u8) = (0xf7, 0x4c, 0x00);
-pub const EMBED_COLOR: (u8, u8, u8) = (0x7b, 0xbe, 0x17);

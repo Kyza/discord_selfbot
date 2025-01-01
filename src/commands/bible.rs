@@ -88,7 +88,7 @@ struct BibleModal {
 	ephemeral: Option<String>,
 }
 
-/// Runs OCR on valid attachments.
+/// Checks how many words are in the Bible.
 #[poise::command(
 	context_menu_command = "Words In The Bible",
 	owners_only,

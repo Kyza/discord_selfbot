@@ -3,7 +3,7 @@ use poise::{serenity_prelude::CreateAllowedMentions, CreateReply};
 
 use crate::types::Context;
 
-/// Sends a link to a GitHub repository.
+/// Sends a formatted link to a GitHub profile or repository.
 #[poise::command(
 	owners_only,
 	track_edits,
@@ -14,8 +14,8 @@ use crate::types::Context;
 )]
 pub async fn github(
 	ctx: Context<'_>,
-	#[description = "GitHub user."] user: String,
-	#[description = "GitHub repository name."] repository: String,
+	#[description = "GitHub user name."] user: String,
+	#[description = "GitHub repository name."] repository: Option<String>,
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
@@ -27,9 +27,13 @@ pub async fn github(
 		ctx.defer().await?;
 	}
 
-	let response = format!(
-		"[{user}/{repository}](https://github.com/{user}/{repository})",
-	);
+	let response = if let Some(repository) = repository {
+		format!(
+			"[{user}/{repository}](https://github.com/{user}/{repository})",
+		)
+	} else {
+		format!("[{user}](https://github.com/{user})",)
+	};
 
 	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())

@@ -13,7 +13,7 @@ use poise::{
 };
 use rand::Rng;
 
-/// Converts any image type into a 2 frame WebP so that it can be favorited on Discord.
+/// Runs a basic FFmpeg command on uploaded media.
 #[poise::command(
 	slash_command,
 	owners_only,

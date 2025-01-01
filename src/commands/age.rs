@@ -8,7 +8,7 @@ use poise::{
 
 use crate::types::Context;
 
-/// Tells you when an account was created.
+/// Sends the timestamp of the ID or user's creation date.
 #[poise::command(
 	owners_only,
 	track_edits,

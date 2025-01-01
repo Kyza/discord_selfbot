@@ -7,7 +7,7 @@ use poise::{
 
 use crate::types::Context;
 
-/// Rolls dice.
+/// Rolls dice notation.
 ///
 /// xdy [OPTIONS] [TARGET] [FAILURE] [! REASON]
 /// roll `x` dice(s) with `y` sides
@@ -22,24 +22,24 @@ use crate::types::Context;
 /// d#  : Dropping the lowest (lowercase "d")
 /// r#  : Reroll if <= value
 /// ir# : Indefinite reroll if <= value
-
+///
 /// Target:
 /// t#  : minimum value to count as success
 /// tt# : minimum value to count as two successes
 /// t[<list of numbers>] : enumeration of values considered as success
-
+///
 /// Failure:
 /// f# : value under which it's counted as failure
-
+///
 /// Repetition:
 /// a roll can be repeated with `^` operator: `(2d6 + 6) ^ 8` will roll eight times the expression.
-
+///
 /// Summed repetition:
 /// with the `^+` operator, the roll will be repeated and all the totals summed.
-
+///
 /// Sorted repetition:
 /// with the `^#` operator, the roll will be repeated and sorted by total.
-
+///
 /// Reason:
 /// : : Any text after `:` will be a comment
 #[poise::command(

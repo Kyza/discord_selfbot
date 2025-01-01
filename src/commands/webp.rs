@@ -16,13 +16,14 @@ use poise::{
 #[derive(Debug, Modal)]
 #[name = "Convert To WebP"]
 struct WebPModal {
-	#[placeholder = "The attachment to use. (default: 0)"]
+	#[name = "Attachment Index"]
+	#[placeholder = "The index of the attachment to use. (default: 0)"]
 	attachment_index: Option<String>,
 	#[placeholder = "Whether or not to show the message."]
 	ephemeral: Option<String>,
 }
 
-/// Converts any image type into a 2 frame WebP so that it can be favorited on Discord.
+/// Converts an image to WebP.
 #[poise::command(
 	context_menu_command = "Convert To WebP",
 	owners_only,
@@ -95,7 +96,7 @@ pub async fn webp_context_menu(
 	Ok(())
 }
 
-/// Converts any image type into a 2 frame WebP so that it can be favorited on Discord.
+/// Converts an image to WebP.
 #[poise::command(
 	slash_command,
 	owners_only,

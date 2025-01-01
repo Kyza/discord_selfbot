@@ -200,8 +200,7 @@ enum IdOrTime {
 	None,
 }
 
-/// Tells you when an account was created.
-/// Requires either a user ID or a timestamp.
+/// Lets you easily create a timestamp from an ID or a datetime.
 #[poise::command(
 	owners_only,
 	track_edits,

@@ -42,7 +42,7 @@ pub async fn run_ocr(image: Attachment, languages: String) -> Result<String> {
 
 // TODO: Add a context menu command to run OCR on a message's attachments.
 
-/// Runs OCR on valid attachments.
+/// Runs OCR on an image.
 #[poise::command(
 	slash_command,
 	owners_only,

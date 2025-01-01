@@ -127,7 +127,7 @@ struct TranslateModal {
 	ephemeral: Option<String>,
 }
 
-/// Translates text from one language to another.
+/// Translates text using DeepL.
 #[poise::command(
 	context_menu_command = "Translate Message",
 	owners_only,

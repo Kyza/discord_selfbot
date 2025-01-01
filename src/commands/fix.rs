@@ -56,7 +56,7 @@ impl XBSkyView {
 	}
 }
 
-/// Makes social media links embed properly. Works for X, TikTok, Instagram, and Reddit.
+/// Makes social media links embed properly. Works for X, Bluesky, TikTok, Instagram, and Reddit.
 #[poise::command(
 	slash_command,
 	owners_only,

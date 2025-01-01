@@ -11,7 +11,7 @@ use url::Url;
 
 const FORMAT: &str = "mp4";
 
-/// [Experimental] Downloads a video from YouTube and sends it.
+/// [Experimental] Downloads and sends a YouTube video and sends it.
 #[poise::command(
 	slash_command,
 	owners_only,

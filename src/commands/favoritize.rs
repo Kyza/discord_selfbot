@@ -16,13 +16,14 @@ use poise::{
 #[derive(Debug, Modal)]
 #[name = "Favoritize Image"]
 struct FavoritizeModal {
-	#[placeholder = "The attachment to use. (default: 0)"]
+	#[name = "Attachment Index"]
+	#[placeholder = "The index of the attachment to use. (default: 0)"]
 	attachment_index: Option<String>,
 	#[placeholder = "Whether or not to show the message."]
 	ephemeral: Option<String>,
 }
 
-/// Converts any image type into a 2 frame WebP so that it can be favorited on Discord.
+/// Converts any image type into a 2 frame WebP so that it can be added to your favorited GIFs list.
 #[poise::command(
 	context_menu_command = "Favoritize Image",
 	owners_only,

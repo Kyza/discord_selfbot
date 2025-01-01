@@ -111,7 +111,7 @@ pub struct CobaltErrorContext {
 	pub limit: i32,
 }
 
-/// Downloads a media file from a URL and sends it.
+/// Downloads media from a URL using the Cobalt API and sends it.
 #[poise::command(
 	slash_command,
 	owners_only,
