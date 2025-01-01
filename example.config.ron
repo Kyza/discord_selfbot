@@ -8,6 +8,6 @@ Config(
 	wolfram_alpha_full_app_id: "",
 	// The language name as it appears in the DeepL website.
 	deepl_target_language: "",
-	// https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+	// https://wikipedia.org/wiki/List_of_tz_database_time_zones
 	timezone: "",
 )
