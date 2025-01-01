@@ -5,7 +5,9 @@ Config(
 		UserId(220584715265114113),
 	],
 	application_id: UserId(),
-	wolfram_alpha_full_app_id: "",
+	// https://developer.wolframalpha.com/
+	// Set to None to disable Wolfram Alpha.
+	wolfram_alpha_full_app_id: Some(""),
 	// The language name as it appears in the DeepL website.
 	deepl_target_language: "",
 	// https://wikipedia.org/wiki/List_of_tz_database_time_zones

@@ -62,6 +62,14 @@ pub async fn wolfram(
 		ctx.defer().await?;
 	}
 
+	let wolfram_alpha_full_app_id = if let Some(app_id) =
+		ctx.data().config.wolfram_alpha_full_app_id.clone()
+	{
+		app_id
+	} else {
+		return Err(anyhow!("wolfram_alpha_full_app_id is not set."));
+	};
+
 	let query = urlencoding::encode(&query);
 
 	let full_results_api_url = format!(
@@ -69,7 +77,7 @@ pub async fn wolfram(
 		query,
 		generate_timeouts(Duration::from_secs(60)),
 		"&format=plaintext,image&output=json&async=false&units=metric&mag=2&appid=",
-	   ctx.data().config.wolfram_alpha_full_app_id
+	   wolfram_alpha_full_app_id
 	);
 
 	let full_response =

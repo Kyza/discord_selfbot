@@ -36,8 +36,6 @@ By default the bot should send messages as non-ephemeral, but if you want to mak
 
 As long as you don't change any files you can use `update_restart.cmd` to pull the latest code and restart it.
 
-Currently all the API keys are required to be in the config file. I might disable commands individually based on what exists later.
-
 ## Commands
 
 - [x] `/age` - Sends the timestamp of the ID or user's creation date.

@@ -27,9 +27,9 @@ pub struct Config {
 	pub discord_token: String,
 	pub owner_ids: HashSet<serenity::UserId>,
 	pub application_id: serenity::UserId,
-	pub wolfram_alpha_full_app_id: String,
-	// pub wolfram_alpha_simple_app_id: String,
-	// pub wolfram_alpha_short_app_id: String,
+	pub wolfram_alpha_full_app_id: Option<String>,
+	// pub wolfram_alpha_simple_app_id: Option<String>,
+	// pub wolfram_alpha_short_app_id: Option<String>,
 	pub deepl_target_language: String,
 	pub timezone: String,
 }
