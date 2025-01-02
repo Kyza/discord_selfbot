@@ -154,11 +154,8 @@ pub async fn translate_context_menu(
 		.allowed_mentions(CreateAllowedMentions::default())
 		.ephemeral(ephemeral);
 
-	let content =
-		get_content_from_message(&Context::from(ctx), &message).await?;
-
 	let translation_result = translate_text(
-		&content,
+		&message.content,
 		&data.source_language.unwrap_or("auto".to_string()),
 		&data
 			.target_language
@@ -174,22 +171,6 @@ pub async fn translate_context_menu(
 	ctx.send(reply).await?;
 
 	Ok(())
-}
-
-async fn get_content_from_message(
-	ctx: &Context<'_>,
-	message: &Message,
-) -> Result<String> {
-	if let Some(reference) = message.message_reference.clone() {
-		// Get it from the IDs.
-		let message = ctx
-			.http()
-			.get_message(reference.channel_id, reference.message_id.unwrap())
-			.await?;
-		Ok(message.content.clone())
-	} else {
-		Ok(message.content.clone())
-	}
 }
 
 /// Translates text from one language to another.
@@ -283,6 +264,7 @@ pub async fn translate_text(
 	// caps.set_log_level(LogLevel::Trace)?;
 	let driver = WebDriver::new("http://localhost:4444", caps).await?;
 
+	// Ensure the page is in English.
 	let starting_url = format!("https://www.deepl.com/en/translator");
 	driver.goto(starting_url.clone()).await?;
 
