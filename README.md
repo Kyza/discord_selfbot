@@ -44,6 +44,9 @@ As long as you don't change any files you can use `update_restart.cmd` to pull t
 - [ ] `/cobalt` - Downloads media from a URL using the Cobalt API and sends it.
    - Disabled until Cobalt gets an official API.
 - [x] `/help` - Shows the help menu.
+- [x] `/embed` - Creates and sends an embed from either fields or multiple from a RON representation.
+   - https://github.com/ron-rs/ron
+   - https://docs.rs/poise/latest/poise/serenity_prelude/struct.Embed.html
 - [x] `/escape` - Escapes basic markdown characters.
 - [x] `/favoritize` - Converts any image type into a 2 frame WebP so that it can be added to your favorited GIFs list.
    - [x] Context menu supported.

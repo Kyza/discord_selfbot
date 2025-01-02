@@ -8,8 +8,7 @@ use poise::{
 	serenity_prelude::{
 		CreateActionRow, CreateAllowedMentions, CreateAttachment,
 		CreateButton, CreateEmbed, CreateInteractionResponse,
-		CreateInteractionResponseFollowup, CreateSelectMenuOption,
-		Mentionable,
+		CreateInteractionResponseFollowup, Mentionable,
 	},
 	CreateReply,
 };
@@ -135,7 +134,7 @@ pub async fn wolfram(
 				had_image = true;
 				// Download the image so that it doesn't expire and supports
 				// alt text for whenever Discord remembers to add it to embeds.
-				let image_name = format!(title.to_snake_case(), ".webp");
+				let image_name = format!(page_title.to_snake_case(), ".webp");
 				let mut image_attachment = CreateAttachment::bytes(
 					ctx.data()
 						.http

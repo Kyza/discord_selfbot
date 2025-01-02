@@ -1,7 +1,16 @@
 use anyhow::Error;
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, Colour};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, fs};
+
+/// No more British.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Color(u32);
+impl From<Color> for Colour {
+	fn from(color: Color) -> Self {
+		Colour::from(color.0)
+	}
+}
 
 #[derive(Debug)]
 pub struct BotData {
@@ -32,6 +41,7 @@ pub struct Config {
 	// pub wolfram_alpha_short_app_id: Option<String>,
 	pub deepl_target_language: String,
 	pub timezone: String,
+	pub embed_color: Color,
 }
 impl Default for Config {
 	fn default() -> Self {

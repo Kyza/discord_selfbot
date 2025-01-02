@@ -39,6 +39,7 @@ async fn main() {
 				commands::ffmpeg(),
 				commands::translate(),
 				commands::translate_context_menu(),
+				commands::embed(),
 			],
 			..Default::default()
 		})

@@ -12,4 +12,6 @@ Config(
 	deepl_target_language: "",
 	// https://wikipedia.org/wiki/List_of_tz_database_time_zones
 	timezone: "",
+	// The default color of embeds from `/embed`.
+	embed_color: Color(0x000000),
 )
