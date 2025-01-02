@@ -1,14 +1,15 @@
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
-use heck::ToTitleCase;
+use heck::{ToSnakeCase, ToTitleCase};
 use indexmap::IndexMap;
 use inline_format::format;
 use poise::{
 	serenity_prelude::{
-		CreateActionRow, CreateAllowedMentions, CreateButton, CreateEmbed,
-		CreateInteractionResponse, CreateInteractionResponseFollowup,
-		CreateSelectMenuOption, Mentionable,
+		CreateActionRow, CreateAllowedMentions, CreateAttachment,
+		CreateButton, CreateEmbed, CreateInteractionResponse,
+		CreateInteractionResponseFollowup, CreateSelectMenuOption,
+		Mentionable,
 	},
 	CreateReply,
 };
@@ -95,8 +96,10 @@ pub async fn wolfram(
 		.as_array()
 		.ok_or_else(|| anyhow!("Invalid response format"))?;
 
-	let mut page_select_options = Vec::new();
-	let mut page_map: IndexMap<String, CreateEmbed> = IndexMap::new();
+	let mut page_map: IndexMap<
+		String,
+		(CreateEmbed, Option<CreateAttachment>),
+	> = IndexMap::new();
 
 	for pod in pods {
 		let title = pod["title"].as_str().unwrap_or("Untitled");
@@ -117,6 +120,7 @@ pub async fn wolfram(
 
 			let mut had_plaintext = false;
 			let mut had_image = false;
+			let mut image = None;
 
 			let plaintext = subpod["plaintext"].as_str();
 			if let Some(plaintext) = plaintext {
@@ -129,7 +133,27 @@ pub async fn wolfram(
 			let image_url = subpod["img"]["src"].as_str();
 			if let Some(image_url) = image_url {
 				had_image = true;
-				page = page.image(image_url);
+				// Download the image so that it doesn't expire and supports
+				// alt text for whenever Discord remembers to add it to embeds.
+				let image_name = format!(title.to_snake_case(), ".webp");
+				let mut image_attachment = CreateAttachment::bytes(
+					ctx.data()
+						.http
+						.get(image_url)
+						.send()
+						.await?
+						.bytes()
+						.await?,
+					image_name.clone(),
+				);
+				if had_plaintext {
+					if let Some(plaintext) = plaintext {
+						image_attachment =
+							image_attachment.description(plaintext);
+					}
+				}
+				image = Some(image_attachment);
+				page = page.attachment(image_name);
 			}
 
 			if !had_plaintext && !had_image {
@@ -137,12 +161,7 @@ pub async fn wolfram(
 					page.description("Pod didn't have any parsable content.\nView it online to see the full result.");
 			}
 
-			page_select_options.push(CreateSelectMenuOption::new(
-				page_title.clone(),
-				page_title.clone(),
-			));
-
-			page_map.insert(page_title.clone(), page.clone());
+			page_map.insert(page_title.clone(), (page.clone(), image));
 		}
 	}
 
@@ -161,21 +180,30 @@ pub async fn wolfram(
 
 	page_map.shift_remove("Input");
 	let mut added_embed = false;
-	if let Some(embed) = page_map.get("Input Interpretation") {
+	if let Some((embed, attachment)) = page_map.get("Input Interpretation") {
 		reply = reply.embed(embed.clone());
+		if let Some(attachment) = attachment {
+			reply = reply.attachment(attachment.clone());
+		}
 		page_map.shift_remove("Input Interpretation");
 		added_embed = true;
 	}
-	if let Some(embed) = page_map.get("Result") {
+	if let Some((embed, attachment)) = page_map.get("Result") {
 		reply = reply.embed(embed.clone());
+		if let Some(attachment) = attachment {
+			reply = reply.attachment(attachment.clone());
+		}
 		page_map.shift_remove("Result");
 		added_embed = true;
 	}
 	// As a backup, add the first embed.
 	if !added_embed {
 		// If the default embed wasn't added, add the first one.
-		if let Some(embed) = page_map.values().next() {
+		if let Some((embed, attachment)) = page_map.values().next() {
 			reply = reply.embed(embed.clone());
+			if let Some(attachment) = attachment {
+				reply = reply.attachment(attachment.clone());
+			}
 			// Remove the first embed from the map.
 			if let Some(first_key) = page_map.keys().next().cloned() {
 				page_map.shift_remove(&first_key);
@@ -233,7 +261,9 @@ pub async fn wolfram(
 
 				let next = page_map.clone();
 				let next = next.values();
-				let next = next.collect::<Vec<&CreateEmbed>>();
+				let next = next
+					.collect::<Vec<&(CreateEmbed, Option<CreateAttachment>)>>(
+					);
 				let chunks = next.chunks(10);
 				for chunk in chunks {
 					let mut followup =
@@ -242,8 +272,11 @@ pub async fn wolfram(
 						followup = followup
 							.content(interaction.user.mention().to_string());
 					}
-					for embed in chunk {
+					for (embed, attachment) in chunk {
 						followup = followup.add_embed((*embed).clone());
+						if let Some(attachment) = attachment {
+							followup = followup.add_file(attachment.clone());
+						}
 					}
 					interaction
 						.create_followup(
