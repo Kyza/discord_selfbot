@@ -7,7 +7,6 @@ use poise::{
 	CreateReply, Modal,
 };
 use regex::Regex;
-use strip_markdown::strip_markdown;
 
 use crate::types::ApplicationContext;
 
@@ -59,17 +58,14 @@ pub fn analyze_text(
 
 	// Replace unmatched words with highlighted versions using regex
 	let highlighted_text = word_boundary
-		.replace_all(
-			&strip_markdown(search_text),
-			|caps: &regex::Captures| {
-				let word = caps[0].to_lowercase();
-				if target_words.contains(&word) {
-					caps[0].to_string()
-				} else {
-					format!("__", &caps[0], "__")
-				}
-			},
-		)
+		.replace_all(&search_text, |caps: &regex::Captures| {
+			let word = caps[0].to_lowercase();
+			if target_words.contains(&word) {
+				caps[0].to_string()
+			} else {
+				format!("__", &caps[0], "__")
+			}
+		})
 		.into_owned();
 
 	Ok(AnalysisResult {
