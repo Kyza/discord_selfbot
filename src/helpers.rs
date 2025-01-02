@@ -1,4 +1,5 @@
 use std::{
+	ffi::OsStr,
 	fs::{self},
 	path::{Path, PathBuf},
 };
@@ -18,6 +19,16 @@ macro_rules! crunch {
 	};
 }
 pub use crunch;
+
+pub fn easy_set_file_name(path: &str, name: &str) -> Box<str> {
+	let pathified = Path::new(path);
+	pathified
+		.with_file_name(name)
+		.with_extension(pathified.extension().unwrap_or(OsStr::new("png")))
+		.to_str()
+		.unwrap_or(path)
+		.into()
+}
 
 pub fn safe_delete(path: &PathBuf) -> Result<bool> {
 	if fs::exists(path)? {

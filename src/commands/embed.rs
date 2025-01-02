@@ -8,7 +8,7 @@ use poise::{
 	CreateReply,
 };
 
-use crate::types::Context;
+use crate::{helpers::easy_set_file_name, types::Context};
 
 /// Builds an embed and sends it.
 /// RON representation can be used to send multiple embeds.
@@ -94,7 +94,9 @@ pub async fn embed(
 				let mut downloaded_attachment =
 					CreateAttachment::url(ctx.http(), &attachment.url)
 						.await?;
-				downloaded_attachment.filename = "image.png".to_string();
+				downloaded_attachment.filename =
+					easy_set_file_name(&attachment.filename, "image")
+						.to_string();
 				downloaded_attachment.description = attachment.description;
 				reply = reply.attachment(downloaded_attachment.clone());
 				let mut image = ron::from_str::<EmbedImage>("(url:\"\")")?;
@@ -108,7 +110,9 @@ pub async fn embed(
 				let mut downloaded_attachment =
 					CreateAttachment::url(ctx.http(), &attachment.url)
 						.await?;
-				downloaded_attachment.filename = "thumbnail.png".to_string();
+				downloaded_attachment.filename =
+					easy_set_file_name(&attachment.filename, "thumbnail")
+						.to_string();
 				downloaded_attachment.description = attachment.description;
 				reply = reply.attachment(downloaded_attachment.clone());
 				let mut image =
