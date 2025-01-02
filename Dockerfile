@@ -52,7 +52,7 @@ FROM alpine:3.21 AS final
 USER root
 
 # Install runtime dependencies.
-RUN apk add --no-cache yt-dlp yt-dlp-core ffmpeg ffmpeg-libs libwebp libwebp-tools tesseract-ocr tesseract-ocr-data-eng geckodriver firefox sudo
+RUN apk add --no-cache yt-dlp yt-dlp-core ffmpeg ffmpeg-libs libwebp libwebp-tools libjxl libjxl-tools tesseract-ocr tesseract-ocr-data-eng geckodriver firefox sudo
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/

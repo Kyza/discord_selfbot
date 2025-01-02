@@ -51,6 +51,8 @@ As long as you don't change any files you can use `update_restart.cmd` to pull t
 - [x] `/fix` - Makes social media links embed properly.
    - Works for X, Bluesky, TikTok, Instagram, and Reddit.
 - [x] `/github` - Sends a formatted link to a GitHub profile or repository.
+- [x] `/jxl` - Converts an image to JXL.
+   - [x] Context menu supported.
 - [x] `/ocr` - Runs OCR on an image.
    - This sucks currently. Someone please find me a decent API or library.
 - [x] `/roll` - Rolls dice notation.

@@ -28,7 +28,7 @@ pub fn safe_delete(path: &PathBuf) -> Result<bool> {
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AttachmentOrThumbnail {
 	Attachment(Attachment),
 	Embed(EmbedThumbnail),

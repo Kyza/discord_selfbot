@@ -34,6 +34,8 @@ async fn main() {
 				commands::favoritize_context_menu(),
 				commands::webp(),
 				commands::webp_context_menu(),
+				commands::jxl(),
+				commands::jxl_context_menu(),
 				commands::ffmpeg(),
 				commands::translate(),
 				commands::translate_context_menu(),
