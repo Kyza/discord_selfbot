@@ -2,6 +2,7 @@ use std::{
 	ffi::OsStr,
 	fs::{self},
 	path::{Path, PathBuf},
+	time::Duration,
 };
 
 use anyhow::{anyhow, Result};
@@ -19,6 +20,7 @@ macro_rules! crunch {
 	};
 }
 pub use crunch;
+use thirtyfour::{prelude::ElementQueryable, By, WebDriver, WebElement};
 
 pub fn easy_set_file_name(path: &str, name: &str) -> Box<str> {
 	let pathified = Path::new(path);
@@ -28,6 +30,24 @@ pub fn easy_set_file_name(path: &str, name: &str) -> Box<str> {
 		.to_str()
 		.unwrap_or(path)
 		.into()
+}
+
+pub async fn wait_for_element(
+	driver: &WebDriver,
+	selector: &str,
+) -> Result<WebElement> {
+	// Sometimes the element becomes stale instantly. No idea why. Cry about it.
+	while let Err(_) = driver
+		.query(By::Css(selector))
+		.wait(Duration::from_secs(60), Duration::from_millis(10))
+		.first()
+		.await
+	{}
+	Ok(driver
+		.query(By::Css(selector))
+		.wait(Duration::from_secs(60), Duration::from_millis(10))
+		.first()
+		.await?)
 }
 
 pub fn safe_delete(path: &PathBuf) -> Result<bool> {

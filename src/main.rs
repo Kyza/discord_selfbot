@@ -40,6 +40,7 @@ async fn main() {
 				commands::translate(),
 				commands::translate_context_menu(),
 				commands::embed(),
+				commands::screenshot(),
 			],
 			..Default::default()
 		})

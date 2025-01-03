@@ -2,7 +2,10 @@ use std::time::Duration;
 use thirtyfour::prelude::*;
 use url::Url;
 
-use crate::types::{ApplicationContext, Context};
+use crate::{
+	helpers::wait_for_element,
+	types::{ApplicationContext, Context},
+};
 use anyhow::{anyhow, Result};
 use fancy_regex::Regex;
 use inline_format::{format, println};
@@ -220,24 +223,6 @@ pub async fn translate(
 	ctx.send(reply).await?;
 
 	Ok(())
-}
-
-pub async fn wait_for_element(
-	driver: &WebDriver,
-	selector: &str,
-) -> Result<WebElement> {
-	// Sometimes the element becomes stale instantly. No idea why. Cry about it.
-	while let Err(_) = driver
-		.query(By::Css(selector))
-		.wait(Duration::from_secs(60), Duration::from_millis(10))
-		.first()
-		.await
-	{}
-	Ok(driver
-		.query(By::Css(selector))
-		.wait(Duration::from_secs(60), Duration::from_millis(10))
-		.first()
-		.await?)
 }
 
 pub struct TranslationResult {

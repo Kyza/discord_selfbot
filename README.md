@@ -60,6 +60,7 @@ As long as you don't change any files you can use `update_restart.cmd` to pull t
    - This sucks currently. Someone please find me a decent API or library.
 - [x] `/roll` - Rolls dice notation.
    - Uses a [custom unlimited version of the `caith` crate](https://github.com/Kyza/caith/commit/a05c6a3954ab3f42d4ce08d8de18fe5a2fae18b6).
+- [x] `/screenshot` - Screenshots a website.
 - [x] `/snowstamp` - Lets you easily create a timestamp from an ID or a datetime.
 - [x] `/translate` - Translates text using DeepL.
    - [x] Context menu supported.
