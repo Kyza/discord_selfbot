@@ -12,6 +12,7 @@ services:
       restart: always
       volumes:
          - ./config.ron:/config.ron
+         - ./assets:/assets
       build:
          context: .
          target: final

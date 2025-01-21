@@ -1,4 +1,4 @@
-use std::{env, fs, process};
+use std::{env, fs, path::PathBuf, process, sync::LazyLock};
 
 use crate::{
 	helpers::{safe_delete, AttachmentOrThumbnail},
@@ -12,6 +12,17 @@ use poise::{
 	},
 	CreateReply, Modal,
 };
+
+// The path to transparent 1x1 WebP.
+static TRANSPARENT_1X1_IMAGE: LazyLock<PathBuf> = LazyLock::new(|| {
+	// if cfg!(debug_assertions) {
+	// 	let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+	// 	path.push("assets/blank.webp");
+	// 	path
+	// } else {
+	PathBuf::from("assets/blank.webp")
+	// }
+});
 
 #[derive(Debug, Modal)]
 #[name = "Favoritize Image"]
@@ -190,14 +201,15 @@ pub async fn convert_to_animated_webp(
 	// Then convert that one WebP into another WebP with two duplicate frames.
 	// This should overwrite itself.
 	// The -loop 1 flag is important to prevent the WebP from looping infinitely.
+	// The +0+0+0+0 frame options are to optimize the rendering and make it appear static.
 	let mut webpmux_command = process::Command::new("webpmux");
 	webpmux_command.args([
 		"-frame",
 		image_output.to_str().unwrap(),
-		"+0+0+0+1",
+		"+0+0+0+0",
 		"-frame",
-		image_output.to_str().unwrap(),
-		"+0+0+0+1",
+		TRANSPARENT_1X1_IMAGE.to_str().unwrap(),
+		"+0+0+0+0",
 		"-loop",
 		"1",
 		"-o",
