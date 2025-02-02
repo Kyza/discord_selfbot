@@ -15,5 +15,5 @@ Config(
 	// The default color of embeds from `/embed`.
 	embed_color: Color(0x000000),
 	// https://api.random.org/dashboard
-	randomorg_api_key: Some("9597dd4c-235d-4563-b478-248800785006"),
+	randomorg_api_key: Some(""),
 )
