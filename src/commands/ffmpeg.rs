@@ -45,33 +45,25 @@ pub async fn ffmpeg(
 		ctx.defer().await?;
 	}
 
-	let flags = flags.unwrap_or(String::new());
+	let flags = flags.unwrap_or_default();
 
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.ephemeral(ephemeral);
 
-	let attachments: Vec<AttachmentOrThumbnail> = {
-		let mut attachments: Vec<Option<AttachmentOrThumbnail>> = Vec::new();
-		attachments
-			.push(Some(AttachmentOrThumbnail::Attachment(attachment_1)));
-		attachments
-			.push(attachment_2.map(|a| AttachmentOrThumbnail::Attachment(a)));
-		attachments
-			.push(attachment_3.map(|a| AttachmentOrThumbnail::Attachment(a)));
-		attachments
-			.push(attachment_4.map(|a| AttachmentOrThumbnail::Attachment(a)));
-		attachments
-			.push(attachment_5.map(|a| AttachmentOrThumbnail::Attachment(a)));
-		attachments
-			.push(attachment_6.map(|a| AttachmentOrThumbnail::Attachment(a)));
-		attachments
-			.push(attachment_7.map(|a| AttachmentOrThumbnail::Attachment(a)));
-		attachments
-			.push(attachment_8.map(|a| AttachmentOrThumbnail::Attachment(a)));
-		// Filter out Nones.
-		attachments.into_iter().flatten().collect()
-	};
+	let attachments: Vec<AttachmentOrThumbnail> = vec![
+		Some(AttachmentOrThumbnail::Attachment(attachment_1)),
+		attachment_2.map(AttachmentOrThumbnail::Attachment),
+		attachment_3.map(AttachmentOrThumbnail::Attachment),
+		attachment_4.map(AttachmentOrThumbnail::Attachment),
+		attachment_5.map(AttachmentOrThumbnail::Attachment),
+		attachment_6.map(AttachmentOrThumbnail::Attachment),
+		attachment_7.map(AttachmentOrThumbnail::Attachment),
+		attachment_8.map(AttachmentOrThumbnail::Attachment),
+	] // Filter out Nones.
+	.into_iter()
+	.flatten()
+	.collect();
 	let new_image_data =
 		run_ffmpeg(&ctx, &attachments, &flags, &output_name).await?;
 	reply = reply

@@ -149,7 +149,7 @@ pub async fn convert_to_animated_webp(
 	let is_gif = attachment.filename().ends_with(".gif");
 	image_output.set_extension("webp");
 
-	fs::write(&image_input, attachment.download(&client).await?)?;
+	fs::write(&image_input, attachment.download(client).await?)?;
 
 	let output = match is_gif {
 		true => {
@@ -164,10 +164,9 @@ pub async fn convert_to_animated_webp(
 				"-o",
 				image_output.to_str().unwrap(),
 			]);
-			let gif2webp_output =
-				run_os_command("gif2webp", gif2webp_command)?;
+			
 
-			gif2webp_output
+			run_os_command("gif2webp", gif2webp_command)?
 		}
 		false => {
 			let mut img2webp_command = process::Command::new("img2webp");
@@ -181,10 +180,9 @@ pub async fn convert_to_animated_webp(
 				"-o",
 				image_output.to_str().unwrap(),
 			]);
-			let img2webp_output =
-				run_os_command("img2webp", img2webp_command)?;
+			
 
-			img2webp_output
+			run_os_command("img2webp", img2webp_command)?
 		}
 	};
 

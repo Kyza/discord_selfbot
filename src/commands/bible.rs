@@ -58,7 +58,7 @@ pub fn analyze_text(
 
 	// Replace unmatched words with highlighted versions using regex
 	let highlighted_text = word_boundary
-		.replace_all(&search_text, |caps: &regex::Captures| {
+		.replace_all(search_text, |caps: &regex::Captures| {
 			let word = caps[0].to_lowercase();
 			if target_words.contains(&word) {
 				caps[0].to_string()

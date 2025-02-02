@@ -13,7 +13,7 @@ enum InstagramView {
 	Gallery,
 }
 impl InstagramView {
-	fn to_prefix(self) -> &'static str {
+	fn to_prefix(&self) -> &'static str {
 		match self {
 			Self::Default => "dd",
 			Self::Direct => "d.dd",
@@ -29,7 +29,7 @@ enum TikTokView {
 	Description,
 }
 impl TikTokView {
-	fn to_query(self) -> Option<&'static str> {
+	fn to_query(&self) -> Option<&'static str> {
 		match self {
 			Self::Default => None,
 			Self::Direct => Some("?isDirect=true"),
@@ -46,7 +46,7 @@ enum XBSkyView {
 	Direct,
 }
 impl XBSkyView {
-	fn to_subdomain(self) -> &'static str {
+	fn to_subdomain(&self) -> &'static str {
 		match self {
 			Self::Default => "",
 			Self::Gallery => "g.",

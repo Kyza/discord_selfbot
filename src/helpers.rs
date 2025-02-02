@@ -63,11 +63,12 @@ pub async fn wait_for_element(
 	selector: &str,
 ) -> Result<WebElement> {
 	// Sometimes the element becomes stale instantly. No idea why. Cry about it.
-	while let Err(_) = driver
+	while driver
 		.query(By::Css(selector))
 		.wait(Duration::from_secs(60), Duration::from_millis(10))
 		.first()
 		.await
+		.is_err()
 	{}
 	Ok(driver
 		.query(By::Css(selector))
@@ -115,7 +116,7 @@ impl AttachmentOrThumbnail {
 				// Parse the URL to get the filename.
 				let url = &e.proxy_url;
 				let url = if let Some(url) = url {
-					url::Url::parse(&url).unwrap_or_else(|_| {
+					url::Url::parse(url).unwrap_or_else(|_| {
 						url::Url::parse("https://example.com/thumbnail.png")
 							.unwrap()
 					})
@@ -123,9 +124,8 @@ impl AttachmentOrThumbnail {
 					return "thumbnail.png".to_string();
 				};
 				if let Some(path_segments) = url.path_segments() {
-					let filename = path_segments
-						.last()
-						.unwrap_or_else(|| "thumbnail.png");
+					let filename =
+						path_segments.last().unwrap_or("thumbnail.png");
 					filename.to_string()
 				} else {
 					"thumbnail.png".to_string()

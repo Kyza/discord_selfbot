@@ -119,8 +119,8 @@ pub async fn embed(
 					ron::from_str::<EmbedThumbnail>("(url:\"\")")?;
 				image.url =
 					format!("attachment://", downloaded_attachment.filename);
-				image.width = image.width;
-				image.height = image.height;
+				image.width = attachment.width;
+				image.height = attachment.height;
 				embed.thumbnail = Some(image);
 			}
 			if let Some(provider) = provider {
@@ -140,7 +140,7 @@ pub async fn embed(
 		embed.colour = embed
 			.colour
 			.or(Some(ctx.data().config.embed_color.clone().into()));
-		reply = reply.embed(embed.try_into()?);
+		reply = reply.embed(embed.into());
 	}
 
 	ctx.send(reply).await?;

@@ -26,7 +26,7 @@ enum Month {
 	December,
 }
 impl Month {
-	fn to_number(self) -> u32 {
+	fn to_number(&self) -> u32 {
 		match self {
 			Self::January => 1,
 			Self::February => 2,

@@ -58,13 +58,7 @@ pub async fn flip(
 		.allowed_mentions(CreateAllowedMentions::default())
 		.ephemeral(ephemeral);
 
-	let api_result = if let Some(api_result) =
-		response["result"]["random"]["data"][0].clone().as_i64()
-	{
-		api_result
-	} else {
-		12001
-	};
+	let api_result = response["result"]["random"]["data"][0].clone().as_i64().unwrap_or(12001);
 
 	// A 1/6,000 chance of it landing on its side.
 	match api_result {

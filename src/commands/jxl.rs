@@ -148,7 +148,7 @@ pub async fn convert_to_animated_jxl(
 	let mut image_output = image_path_template.join(attachment_name);
 	image_output.set_extension("jxl");
 
-	fs::write(&image_input, attachment.download(&client).await?)?;
+	fs::write(&image_input, attachment.download(client).await?)?;
 
 	let output = {
 		let mut cjxl_command = process::Command::new("cjxl");
@@ -159,9 +159,9 @@ pub async fn convert_to_animated_jxl(
 			"10",
 			image_output.to_str().unwrap(),
 		]);
-		let cjxl_output = run_os_command("cjxl", cjxl_command)?;
+		
 
-		cjxl_output
+		run_os_command("cjxl", cjxl_command)?
 	};
 
 	if !output.status.success() {

@@ -18,6 +18,12 @@ pub struct BotData {
 	pub http: reqwest::Client,
 	pub bot_start_time: std::time::Instant,
 }
+impl Default for BotData {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 impl BotData {
 	pub fn new() -> Self {
 		let config = Config::new();

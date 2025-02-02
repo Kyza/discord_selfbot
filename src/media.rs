@@ -5,6 +5,7 @@ use std::{fs::File, path::Path};
 
 use anyhow::{anyhow, Result};
 use byte_unit::Byte;
+use inline_format::format_args;
 use tempfile::NamedTempFile;
 
 #[derive(Debug)]
@@ -148,7 +149,7 @@ fn compress_video(input: &Path, attempt: u8) -> Result<NamedTempFile> {
 
 	println!(
 		"Old bitrate: {}",
-		format!("{}k", video_info.video_bitrate / 1024)
+		format_args!("{}k", video_info.video_bitrate / 1024)
 	);
 	println!("New bitrate: {}", new_bitrate);
 

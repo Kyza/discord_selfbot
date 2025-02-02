@@ -46,19 +46,15 @@ pub fn run_os_command(
 	let stderr_tag = format!("[{}]", tag);
 	let stdout_thread = thread::spawn(move || {
 		let stdout_reader = BufReader::new(stdout);
-		for line in stdout_reader.lines() {
-			if let Ok(line) = line {
-				println!("{} {}", stdout_tag, line);
-			}
+		for line in stdout_reader.lines().map_while(Result::ok) {
+			println!("{} {}", stdout_tag, line);
 		}
 	});
 
 	let stderr_thread = thread::spawn(move || {
 		let stderr_reader = BufReader::new(stderr);
-		for line in stderr_reader.lines() {
-			if let Ok(line) = line {
-				eprintln!("{} {}", stderr_tag, line);
-			}
+		for line in stderr_reader.lines().map_while(Result::ok) {
+			eprintln!("{} {}", stderr_tag, line);
 		}
 	});
 

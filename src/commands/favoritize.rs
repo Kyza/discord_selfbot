@@ -161,7 +161,7 @@ pub async fn convert_to_animated_webp(
 	let mut image_output = image_path_template.join(attachment_name);
 	image_output.set_extension("webp");
 
-	fs::write(&image_input, attachment.download(&client).await?)?;
+	fs::write(&image_input, attachment.download(client).await?)?;
 
 	// img2webp -near_lossless 100 -sharp_yuv -v -loop 0 input.png -d 1 -lossless -q 100 -m 6 -o output.webp
 
