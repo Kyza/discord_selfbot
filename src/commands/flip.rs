@@ -3,7 +3,7 @@ use poise::{serenity_prelude::CreateAllowedMentions, CreateReply};
 
 use crate::types::Context;
 
-/// Flips a nickel.
+/// Flips a nickel using a true random number generator.
 #[poise::command(
 	owners_only,
 	track_edits,
@@ -58,7 +58,10 @@ pub async fn flip(
 		.allowed_mentions(CreateAllowedMentions::default())
 		.ephemeral(ephemeral);
 
-	let api_result = response["result"]["random"]["data"][0].clone().as_i64().unwrap_or(12001);
+	let api_result = response["result"]["random"]["data"][0]
+		.clone()
+		.as_i64()
+		.unwrap_or(12001);
 
 	// A 1/6,000 chance of it landing on its side.
 	match api_result {

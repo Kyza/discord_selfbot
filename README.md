@@ -53,6 +53,7 @@ As long as you don't change any files you can use `update_restart.cmd` to pull t
 - [x] `/ffmpeg` - Runs a basic FFmpeg command on uploaded media.
 - [x] `/fix` - Makes social media links embed properly.
    - Works for X, Bluesky, TikTok, Instagram, and Reddit.
+- [x] `/flip` - Flips a nickel using a true random number generator.
 - [x] `/github` - Sends a formatted link to a GitHub profile or repository.
 - [x] `/jxl` - Converts an image to JXL.
    - [x] Context menu supported.
