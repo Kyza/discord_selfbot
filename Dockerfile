@@ -54,6 +54,9 @@ USER root
 # Install runtime dependencies.
 RUN apk add --no-cache yt-dlp yt-dlp-core ffmpeg ffmpeg-libs libwebp libwebp-tools libjxl libjxl-tools tesseract-ocr tesseract-ocr-data-eng geckodriver firefox sudo
 
+# Install fonts.
+RUN apk add --no-cache font-terminus font-inconsolata font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-vollkorn font-misc-cyrillic font-mutt-misc font-screen-cyrillic font-winitzki-cyrillic font-cronyx-cyrillic font-noto-thai font-noto-tibetan font-ipa font-sony-misc font-jis-misc font-isas-misc font-arabic-misc font-noto-arabic font-noto-armenian font-noto-cherokee font-noto-devanagari font-noto-ethiopic font-noto-georgian font-noto-hebrew font-noto-lao font-noto-malayalam font-noto-tamil font-noto-thaana font-twemoji
+
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/
 # ARG UID=10001
