@@ -9,7 +9,7 @@ use poise::{
 };
 use rusty_tesseract::Image;
 
-use crate::types::Context;
+use crate::{helpers::CreateReplyExt, types::Context};
 
 pub async fn run_ocr(image: Attachment, languages: String) -> Result<String> {
 	let image = image.download().await?;
@@ -69,13 +69,20 @@ pub async fn ocr(
 		ctx.defer().await?;
 	}
 
-	let reply = CreateReply::default()
+	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
 		.ephemeral(ephemeral);
 
 	let output = run_ocr(image, languages).await?;
 
-	ctx.send(reply.content(format!("```\n", output, "\n```")))
-		.await?;
+	reply = reply.content_or_attachment(|is_content| {
+		if is_content {
+			format!("```\n", output, "\n```")
+		} else {
+			output.clone()
+		}
+	});
+
+	ctx.send(reply).await?;
 	Ok(())
 }

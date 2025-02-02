@@ -41,6 +41,7 @@ async fn main() {
 				commands::translate_context_menu(),
 				commands::embed(),
 				commands::screenshot(),
+				commands::flip(),
 			],
 			..Default::default()
 		})

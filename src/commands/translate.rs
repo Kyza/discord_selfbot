@@ -3,7 +3,7 @@ use thirtyfour::prelude::*;
 use url::Url;
 
 use crate::{
-	helpers::wait_for_element,
+	helpers::{wait_for_element, CreateReplyExt},
 	types::{ApplicationContext, Context},
 };
 use anyhow::{anyhow, Result};
@@ -169,7 +169,9 @@ pub async fn translate_context_menu(
 	reply = reply.components(vec![CreateActionRow::Buttons(vec![
 		CreateButton::new_link(translation_result.url).label("View Online"),
 	])]);
-	reply = reply.content(translation_result.translated_text);
+	reply = reply.content_or_attachment(|_| {
+		translation_result.translated_text.to_string()
+	});
 
 	ctx.send(reply).await?;
 
@@ -218,7 +220,9 @@ pub async fn translate(
 	reply = reply.components(vec![CreateActionRow::Buttons(vec![
 		CreateButton::new_link(translation_result.url).label("View Online"),
 	])]);
-	reply = reply.content(translation_result.translated_text);
+	reply = reply.content_or_attachment(|_| {
+		translation_result.translated_text.to_string()
+	});
 
 	ctx.send(reply).await?;
 

@@ -102,8 +102,8 @@ pub async fn embed(
 				let mut image = ron::from_str::<EmbedImage>("(url:\"\")")?;
 				image.url =
 					format!("attachment://", downloaded_attachment.filename);
-				image.width = image.width;
-				image.height = image.height;
+				image.width = attachment.width;
+				image.height = attachment.height;
 				embed.image = Some(image);
 			}
 			if let Some(attachment) = thumbnail {

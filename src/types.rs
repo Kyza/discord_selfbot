@@ -42,6 +42,7 @@ pub struct Config {
 	pub deepl_target_language: String,
 	pub timezone: String,
 	pub embed_color: Color,
+	pub randomorg_api_key: Option<String>,
 }
 impl Default for Config {
 	fn default() -> Self {

@@ -6,7 +6,10 @@ use std::{
 };
 
 use anyhow::{anyhow, Result};
-use poise::serenity_prelude::{Attachment, EmbedThumbnail};
+use poise::{
+	serenity_prelude::{Attachment, CreateAttachment, EmbedThumbnail},
+	CreateReply,
+};
 use reqwest::header;
 
 #[macro_export]
@@ -21,6 +24,29 @@ macro_rules! crunch {
 }
 pub use crunch;
 use thirtyfour::{prelude::ElementQueryable, By, WebDriver, WebElement};
+
+pub trait CreateReplyExt {
+	fn content_or_attachment<F>(&self, cb: F) -> Self
+	where
+		F: Fn(bool) -> String;
+}
+impl CreateReplyExt for CreateReply {
+	fn content_or_attachment<F>(&self, cb: F) -> Self
+	where
+		F: Fn(bool) -> String,
+	{
+		let content_text = cb(true);
+		if content_text.len() <= 2000 {
+			self.clone().content(content_text)
+		} else {
+			let attachment_text = cb(false);
+			self.clone().attachment(CreateAttachment::bytes(
+				attachment_text.as_bytes(),
+				"text.txt",
+			))
+		}
+	}
+}
 
 pub fn easy_set_file_name(path: &str, name: &str) -> Box<str> {
 	let pathified = Path::new(path);
