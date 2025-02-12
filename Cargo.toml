@@ -31,6 +31,7 @@ thirtyfour = "0.35.0"
 fancy-regex = "0.14.0"
 ron = "0.8.1"
 phf = { version = "0.11", default-features = false, features = ["macros"] }
+color-thief = "0.2.2"
 # kalosm = { version = "0.3.2", features = ["vision", "cuda"] }
 # ort-sys = "=2.0.0-rc.8"
 # image = "0.24.7"

@@ -14,7 +14,7 @@ use poise::{
 };
 use url::Url;
 
-use crate::config::Context;
+use crate::config::{Color, Context};
 
 static PLATFORM_CAPITALIZATIONS: phf::Map<&'static str, &'static str> = phf_map! {
 	"Youtube" => "YouTube",
@@ -169,19 +169,45 @@ pub async fn build_song_info_message(
 			}
 		}
 	}
-	if let Some(thumbnail_url_bytes) = thumbnail_url_bytes {
+	if let Some(thumbnail_url_bytes) = thumbnail_url_bytes.clone() {
 		reply = reply.attachment(
 			CreateAttachment::bytes(thumbnail_url_bytes, "thumbnail.png")
 				.description("Cover art."),
 		);
 	}
 
+	let embed_color = {
+		if let Some(thumbnail_url_bytes) = thumbnail_url_bytes {
+			use color_thief::{get_palette, ColorFormat};
+
+			let color_bytes = image::load_from_memory(&thumbnail_url_bytes)
+				.unwrap()
+				.to_rgb8()
+				.into_raw();
+
+			get_palette(&color_bytes[..], ColorFormat::Rgb, 10, 2)?
+				.iter()
+				.next()
+				// u8 u8 u8 to u32
+				.map(|color| {
+					Color(
+						color.r as u32
+							| (color.g as u32) << 8
+							| (color.b as u32) << 16,
+					)
+				})
+				.unwrap_or(ctx.data().config.embed_color.clone())
+		} else {
+			ctx.data().config.embed_color.clone()
+		}
+	};
 	reply = reply.embed(
 		CreateEmbed::new()
 			.title(most_common_song_name)
 			.url(page_url) // Pick the one with the highest resolution.
 			.thumbnail("attachment://thumbnail.png")
-			.description(most_common_artist_name), // .color(EMBED_COLOR),
+			.description(most_common_artist_name)
+			.color(embed_color),
 	);
 
 	reply = reply.components(

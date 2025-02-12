@@ -5,7 +5,7 @@ use std::{collections::HashSet, fs};
 
 /// No more British.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Color(u32);
+pub struct Color(pub u32);
 impl From<Color> for Colour {
 	fn from(color: Color) -> Self {
 		Colour::from(color.0)
