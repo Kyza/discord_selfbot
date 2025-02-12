@@ -6,7 +6,7 @@ use poise::{
 	CreateReply,
 };
 
-use crate::types::Context;
+use crate::config::Context;
 
 /// Sends the timestamp of the ID or user's creation date.
 #[poise::command(

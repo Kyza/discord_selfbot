@@ -1,9 +1,9 @@
 use std::{env, fs, process};
 
 use crate::{
+	config::{ApplicationContext, Context},
 	helpers::{safe_delete, AttachmentOrThumbnail},
 	os_command::run_os_command,
-	types::{ApplicationContext, Context},
 };
 use anyhow::{anyhow, Result};
 use poise::{
@@ -159,7 +159,6 @@ pub async fn convert_to_animated_jxl(
 			"10",
 			image_output.to_str().unwrap(),
 		]);
-		
 
 		run_os_command("cjxl", cjxl_command)?
 	};

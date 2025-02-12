@@ -1,7 +1,7 @@
 use anyhow::Result;
 use poise::{serenity_prelude::CreateAllowedMentions, CreateReply};
 
-use crate::types::Context;
+use crate::config::Context;
 
 /// Converts text to and from Unicode.
 #[poise::command(

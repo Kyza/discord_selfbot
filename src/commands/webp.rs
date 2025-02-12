@@ -1,9 +1,9 @@
 use std::{env, fs, process};
 
 use crate::{
+	config::{ApplicationContext, Context},
 	helpers::{safe_delete, AttachmentOrThumbnail},
 	os_command::run_os_command,
-	types::{ApplicationContext, Context},
 };
 use anyhow::{anyhow, Result};
 use poise::{
@@ -164,7 +164,6 @@ pub async fn convert_to_animated_webp(
 				"-o",
 				image_output.to_str().unwrap(),
 			]);
-			
 
 			run_os_command("gif2webp", gif2webp_command)?
 		}
@@ -180,7 +179,6 @@ pub async fn convert_to_animated_webp(
 				"-o",
 				image_output.to_str().unwrap(),
 			]);
-			
 
 			run_os_command("img2webp", img2webp_command)?
 		}

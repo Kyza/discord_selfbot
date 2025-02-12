@@ -1,6 +1,6 @@
 use anyhow::Error;
 
-use crate::types::Context;
+use crate::config::Context;
 
 /// Shows the help menu. Ephemeral by default.
 #[poise::command(

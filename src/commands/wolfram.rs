@@ -15,7 +15,7 @@ use poise::{
 
 const EMBED_COLOR: u32 = 0xff6600;
 
-use crate::types::Context;
+use crate::config::Context;
 
 pub fn generate_timeouts(time: Duration) -> String {
 	format!(

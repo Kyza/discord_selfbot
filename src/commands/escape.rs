@@ -1,7 +1,7 @@
 use anyhow::Result;
 use poise::{serenity_prelude::CreateAllowedMentions, CreateReply};
 
-use crate::{helpers::escape_markdown, types::Context};
+use crate::{helpers::escape_markdown, config::Context};
 
 /// Escapes basic markdown characters.
 #[poise::command(

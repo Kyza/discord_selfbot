@@ -57,12 +57,14 @@ As long as you don't change any files you can use `update_restart.cmd` to pull t
 - [x] `/github` - Sends a formatted link to a GitHub profile or repository.
 - [x] `/jxl` - Converts an image to JXL.
    - [x] Context menu supported.
+- [x] `/now_playing` - Shows what you're currently listening to from the ListenBrainz API.
 - [x] `/ocr` - Runs OCR on an image.
    - This sucks currently. Someone please find me a decent API or library.
 - [x] `/roll` - Rolls dice notation.
    - Uses a [custom unlimited version of the `caith` crate](https://github.com/Kyza/caith/commit/a05c6a3954ab3f42d4ce08d8de18fe5a2fae18b6).
 - [x] `/screenshot` - Screenshots a website.
 - [x] `/snowstamp` - Lets you easily create a timestamp from an ID or a datetime.
+- [x] `/song_info` - Shows song information from a given link.
 - [x] `/translate` - Translates text using DeepL.
    - [x] Context menu supported.
    - DeepL's API signup has been broken for me for the past few months, so this uses `thirtyfour` and `geckodriver`.

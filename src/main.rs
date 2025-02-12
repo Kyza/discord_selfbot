@@ -1,11 +1,11 @@
 use poise::serenity_prelude as serenity;
-use types::{BotData, Config};
+use config::{BotData, Config};
 
 pub mod commands;
 pub mod helpers;
 pub mod media;
 pub mod os_command;
-pub mod types;
+pub mod config;
 
 #[tokio::main]
 async fn main() {
@@ -42,6 +42,8 @@ async fn main() {
 				commands::embed(),
 				commands::screenshot(),
 				commands::flip(),
+				commands::now_playing(),
+				commands::song_info(),
 			],
 			..Default::default()
 		})

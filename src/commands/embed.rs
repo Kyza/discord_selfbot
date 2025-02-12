@@ -8,7 +8,7 @@ use poise::{
 	CreateReply,
 };
 
-use crate::{helpers::easy_set_file_name, types::Context};
+use crate::{helpers::easy_set_file_name, config::Context};
 
 /// Builds an embed and sends it.
 /// RON representation can be used to send multiple embeds.

@@ -5,7 +5,7 @@ use poise::{
 	CreateReply,
 };
 
-use crate::types::Context;
+use crate::config::Context;
 
 /// Rolls dice notation.
 ///

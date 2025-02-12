@@ -4,7 +4,7 @@ use url::Url;
 
 use crate::{
 	helpers::{wait_for_element, CreateReplyExt},
-	types::{ApplicationContext, Context},
+	config::{ApplicationContext, Context},
 };
 use anyhow::{anyhow, Result};
 use fancy_regex::Regex;

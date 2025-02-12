@@ -1,4 +1,4 @@
-use crate::types::Context;
+use crate::config::Context;
 use anyhow::Result;
 use poise::{
 	serenity_prelude::CreateAllowedMentions, ChoiceParameter, CreateReply,

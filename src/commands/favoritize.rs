@@ -3,7 +3,7 @@ use std::{env, fs, path::PathBuf, process, sync::LazyLock};
 use crate::{
 	helpers::{safe_delete, AttachmentOrThumbnail},
 	os_command::run_os_command,
-	types::{ApplicationContext, Context},
+	config::{ApplicationContext, Context},
 };
 use anyhow::{anyhow, Result};
 use poise::{

@@ -8,7 +8,7 @@ use poise::{
 };
 use regex::Regex;
 
-use crate::types::ApplicationContext;
+use crate::config::ApplicationContext;
 
 const KJV_BIBLE: &str = include_str!("../../assets/kjv.txt");
 

@@ -49,6 +49,7 @@ pub struct Config {
 	pub timezone: String,
 	pub embed_color: Color,
 	pub randomorg_api_key: Option<String>,
+	pub listenbrainz_user: Option<String>,
 }
 impl Default for Config {
 	fn default() -> Self {

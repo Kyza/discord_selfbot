@@ -3,7 +3,7 @@ use std::{env, fs, process};
 use crate::{
 	helpers::{safe_delete, AttachmentOrThumbnail},
 	os_command::run_os_command,
-	types::Context,
+	config::Context,
 };
 use anyhow::{anyhow, Result};
 use inline_format::format;

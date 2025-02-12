@@ -4,7 +4,7 @@ use poise::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::types::Context;
+use crate::config::Context;
 
 #[derive(Debug, Serialize, Deserialize, Clone, ChoiceParameter)]
 pub enum WaybackAction {

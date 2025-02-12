@@ -16,4 +16,6 @@ Config(
 	embed_color: Color(0x000000),
 	// https://api.random.org/dashboard
 	randomorg_api_key: Some(""),
+	// ListenBrainz user name.
+	listenbrainz_user: Some(""),
 )

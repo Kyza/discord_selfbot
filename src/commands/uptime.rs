@@ -1,6 +1,6 @@
 use anyhow::Error;
 
-use crate::types::Context;
+use crate::config::Context;
 
 /// Tells you how long the bot has been up for.
 #[poise::command(

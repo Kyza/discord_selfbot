@@ -1,7 +1,7 @@
 use thirtyfour::prelude::*;
 use url::Url;
 
-use crate::types::Context;
+use crate::config::Context;
 use anyhow::Result;
 use inline_format::println;
 use poise::{

@@ -9,7 +9,7 @@ use poise::{
 };
 use rusty_tesseract::Image;
 
-use crate::{helpers::CreateReplyExt, types::Context};
+use crate::{config::Context, helpers::CreateReplyExt};
 
 pub async fn run_ocr(image: Attachment, languages: String) -> Result<String> {
 	let image = image.download().await?;

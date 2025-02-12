@@ -1,6 +1,6 @@
 use std::{env, fs, process};
 
-use crate::{os_command::run_os_command, types::Context};
+use crate::{os_command::run_os_command, config::Context};
 use anyhow::{anyhow, Result};
 use poise::{
 	serenity_prelude::{CreateAllowedMentions, CreateAttachment},
