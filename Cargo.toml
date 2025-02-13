@@ -36,3 +36,7 @@ color-thief = "0.2.2"
 # ort-sys = "=2.0.0-rc.8"
 # image = "0.24.7"
 # cudarc = { version = "=0.12.1", features = ["cuda-version-from-build-system"] }
+
+# https://github.com/Kyza/discord_selfbot/security/dependabot/1
+# rust-openssl ssl::select_next_proto use after free
+openssl = "0.10.70"
