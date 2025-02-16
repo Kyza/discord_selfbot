@@ -14,7 +14,10 @@ use poise::{
 };
 use url::Url;
 
-use crate::config::{Color, Context};
+use crate::{
+	config::{Color, Context},
+	helpers::escape_markdown,
+};
 
 static PLATFORM_CAPITALIZATIONS: phf::Map<&'static str, &'static str> = phf_map! {
 	"Youtube" => "YouTube",
@@ -203,10 +206,10 @@ pub async fn build_song_info_message(
 	};
 	reply = reply.embed(
 		CreateEmbed::new()
-			.title(most_common_song_name)
+			.title(escape_markdown(&most_common_song_name))
 			.url(page_url) // Pick the one with the highest resolution.
 			.thumbnail("attachment://thumbnail.png")
-			.description(most_common_artist_name)
+			.description(escape_markdown(&most_common_artist_name))
 			.color(embed_color),
 	);
 
