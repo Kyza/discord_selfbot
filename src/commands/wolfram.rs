@@ -89,7 +89,62 @@ pub async fn wolfram(
 		));
 	}
 
+	let mut reply = CreateReply::default()
+		.allowed_mentions(CreateAllowedMentions::default())
+		.ephemeral(ephemeral);
+
 	let json: serde_json::Value = full_response.json().await?;
+
+	let numpods = json["queryresult"]["numpods"]
+		.as_u64()
+		.ok_or_else(|| anyhow!("Invalid numpods format"))?;
+
+	let didyoumeans = json["queryresult"]["didyoumeans"].as_array();
+
+	if let Some(didyoumeans) = didyoumeans {
+		let mut embed = CreateEmbed::new()
+			.title("Did you mean...")
+			.color(EMBED_COLOR);
+
+		for didyoumean in didyoumeans {
+			let val = didyoumean["val"].as_str().unwrap_or("???");
+			let score = didyoumean["score"]
+				.as_str()
+				.unwrap_or("0.0")
+				.parse::<f64>()?;
+			embed = embed.field(
+				format!((score * 100.0).round(), "% Confidence"),
+				format!("```rust\n", val, "```"),
+				true,
+			);
+		}
+
+		reply = reply.embed(embed);
+	}
+
+	if numpods == 0 {
+		reply = reply.components(vec![CreateActionRow::Buttons(vec![
+			CreateButton::new_link(format!(
+				"https://www.wolframalpha.com/input?i=",
+				query
+			))
+			.label("View Online"),
+		])]);
+
+		ctx.send(reply.clone()).await?;
+
+		return Ok(());
+	} else {
+		reply = reply.components(vec![CreateActionRow::Buttons(vec![
+			CreateButton::new("show_all_private").label("Show All (Private)"),
+			CreateButton::new("show_all_public").label("Show All (Public)"),
+			CreateButton::new_link(format!(
+				"https://www.wolframalpha.com/input?i=",
+				query
+			))
+			.label("View Online"),
+		])]);
+	}
 
 	let pods = json["queryresult"]["pods"]
 		.as_array()
@@ -163,19 +218,6 @@ pub async fn wolfram(
 			page_map.insert(page_title.clone(), (page.clone(), image));
 		}
 	}
-
-	let mut reply = CreateReply::default()
-		.allowed_mentions(CreateAllowedMentions::default())
-		.components(vec![CreateActionRow::Buttons(vec![
-			CreateButton::new("show_all_private").label("Show All (Private)"),
-			CreateButton::new("show_all_public").label("Show All (Public)"),
-			CreateButton::new_link(format!(
-				"https://www.wolframalpha.com/input?i=",
-				query
-			))
-			.label("View Online"),
-		])])
-		.ephemeral(ephemeral);
 
 	page_map.shift_remove("Input");
 	let mut added_embed = false;
