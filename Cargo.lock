@@ -333,7 +333,7 @@ checksum = "f61dac84819c6588b558454b194026eb1f09c293b9036ae9b159e74e73ab6cf9"
 [[package]]
 name = "caith"
 version = "4.2.3"
-source = "git+https://github.com/Kyza/caith.git?rev=a05c6a#a05c6a3954ab3f42d4ce08d8de18fe5a2fae18b6"
+source = "git+https://github.com/Kyza/caith.git?rev=fed75b3#fed75b3e5130835d2ea80c41a0dc3f09d1f82278"
 dependencies = [
  "pest",
  "pest_derive",
