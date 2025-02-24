@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::LazyLock};
 
 use anyhow::{anyhow, Result};
 use byte_unit::rust_decimal::prelude::ToPrimitive;
@@ -8,14 +8,15 @@ use phf::phf_map;
 use poise::{
 	serenity_prelude::{
 		CreateActionRow, CreateAllowedMentions, CreateAttachment,
-		CreateButton, CreateEmbed,
+		CreateButton, CreateEmbed, Message,
 	},
-	CreateReply,
+	CreateReply, Modal,
 };
+use regex::Regex;
 use url::Url;
 
 use crate::{
-	config::{Color, Context},
+	config::{ApplicationContext, Color, Context},
 	helpers::escape_markdown,
 };
 
@@ -228,6 +229,78 @@ pub async fn build_song_info_message(
 	);
 
 	Ok(reply)
+}
+
+static LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+	Regex::new(r#"^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])"#).unwrap()
+});
+
+#[derive(Debug, Modal)]
+#[name = "Song Info"]
+struct SongInfoModal {
+	#[name = "URL Index"]
+	#[placeholder = "The index of the URL to use. (default: 0)"]
+	url_index: Option<String>,
+	#[placeholder = "Whether or not to show the message."]
+	ephemeral: Option<String>,
+}
+
+/// Shows song information from a given link.
+#[poise::command(
+	context_menu_command = "Song Info",
+	owners_only,
+	track_edits,
+	install_context = "User",
+	interaction_context = "Guild|BotDm|PrivateChannel",
+	ephemeral
+)]
+pub async fn song_info_context_menu(
+	ctx: ApplicationContext<'_>,
+	#[description = "The message to get the link from."] message: Message,
+) -> Result<()> {
+	let data = SongInfoModal::execute(ctx)
+		.await?
+		.ok_or_else(|| anyhow!("No modal data."))?;
+
+	let ephemeral = match data.ephemeral.as_deref() {
+		Some("false") => false,
+		Some(_) => true,
+		None => false,
+	};
+
+	let urls = LINK_REGEX
+		.find_iter(&message.content)
+		.map(|m| Url::parse(m.as_str()))
+		.collect::<Vec<_>>();
+	let url_index = match data.url_index.as_deref() {
+		Some(url_index) => url_index.parse::<usize>()?,
+		None => 0,
+	};
+	let url = urls.get(url_index).ok_or_else(|| {
+		anyhow!(
+			"You chose URL {} but there {} only {} URL{}.",
+			url_index + 1,
+			if urls.len() == 1 { "is" } else { "are" },
+			urls.len(),
+			if urls.len() == 1 { "" } else { "s" },
+		)
+	})?;
+	let url = url
+		.clone()
+		.map_err(|_| anyhow!("Somehow the selected URL is invalid."))?;
+
+	ctx.send(
+		build_song_info_message(
+			&Context::Application(ctx),
+			url,
+			None,
+			None,
+			ephemeral,
+		)
+		.await?,
+	)
+	.await?;
+	Ok(())
 }
 
 /// Shows song information from a given link.

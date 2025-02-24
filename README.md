@@ -65,6 +65,7 @@ As long as you don't change any files you can use `update_restart.cmd` to pull t
 - [x] `/screenshot` - Screenshots a website.
 - [x] `/snowstamp` - Lets you easily create a timestamp from an ID or a datetime.
 - [x] `/song_info` - Shows song information from a given link.
+   - [x] Context menu supported.
 - [x] `/translate` - Translates text using DeepL.
    - [x] Context menu supported.
    - DeepL's API signup has been broken for me for the past few months, so this uses `thirtyfour` and `geckodriver`.

@@ -50,6 +50,7 @@ pub struct Config {
 	pub embed_color: Color,
 	pub randomorg_api_key: Option<String>,
 	pub listenbrainz_user: Option<String>,
+	pub context_menu_commands: Vec<String>,
 }
 impl Default for Config {
 	fn default() -> Self {

@@ -93,7 +93,7 @@ struct BibleModal {
 	interaction_context = "Guild|BotDm|PrivateChannel",
 	ephemeral
 )]
-pub async fn bible(
+pub async fn bible_context_menu(
 	ctx: ApplicationContext<'_>,
 	message: Message,
 ) -> Result<()> {

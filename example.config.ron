@@ -18,4 +18,13 @@ Config(
 	randomorg_api_key: Some(""),
 	// ListenBrainz user name.
 	listenbrainz_user: Some(""),
+	// The commands to allow in the context menu.
+	// Up to 5 commands are allowed. This is a Discord limitation.
+	context_menu_commands: [
+		"favoritize",
+		"webp",
+		"bible",
+		"translate",
+		"song_info",
+	]
 )
