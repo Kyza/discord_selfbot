@@ -91,10 +91,9 @@ pub async fn get_song_platform_data(
 				.map(|s| s.to_string()),
 			thumbnail_quality: entity["thumbnailWidth"]
 				.as_u64()
-				.map(|w| {
+				.and_then(|w| {
 					(w * entity["thumbnailHeight"].as_u64().unwrap()).to_u32()
-				})
-				.flatten(),
+				}),
 		});
 	}
 
@@ -118,7 +117,7 @@ pub async fn build_song_info_message(
 		.ephemeral(ephemeral);
 
 	let (page_url, mut platforms) =
-		get_song_platform_data(ctx, &link.to_string()).await?;
+		get_song_platform_data(ctx, link.as_ref()).await?;
 
 	let most_common_song_name = song_name
 		.or_else(|| {
@@ -166,7 +165,7 @@ pub async fn build_song_info_message(
 			if let Ok(bytes) = res.bytes().await {
 				// Ensure the server actually responded.
 				// artwork.anghcdn.co loves ignoring requests.
-				if bytes.len() > 0 {
+				if !bytes.is_empty() {
 					thumbnail_url_bytes = Some(bytes);
 					break;
 				}
@@ -189,9 +188,7 @@ pub async fn build_song_info_message(
 				.to_rgb8()
 				.into_raw();
 
-			get_palette(&color_bytes[..], ColorFormat::Rgb, 10, 2)?
-				.iter()
-				.next()
+			get_palette(&color_bytes[..], ColorFormat::Rgb, 10, 2)?.first()
 				// u8 u8 u8 to u32
 				.map(|color| {
 					Color(

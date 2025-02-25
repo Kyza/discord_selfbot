@@ -30,8 +30,7 @@ impl<'de> Deserialize<'de> for PlayingNow {
 			duration: value["listens"][0]["track_metadata"]
 				["additional_info"]["duration"]
 				.as_u64()
-				.map(|s| s.to_u32())
-				.flatten(),
+				.and_then(|s| s.to_u32()),
 			origin_url: value["listens"][0]["track_metadata"]
 				["additional_info"]["origin_url"]
 				.as_str()
