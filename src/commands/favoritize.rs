@@ -1,9 +1,9 @@
 use std::{env, fs, path::PathBuf, process, sync::LazyLock};
 
 use crate::{
+	config::{ApplicationContext, Context},
 	helpers::{safe_delete, AttachmentOrThumbnail},
 	os_command::run_os_command,
-	config::{ApplicationContext, Context},
 };
 use anyhow::{anyhow, Result};
 use poise::{
@@ -198,7 +198,7 @@ pub async fn convert_to_animated_webp(
 
 	// webpmux -frame output.webp +0+0+0+1 -frame output.webp +0+0+0+1 -loop 0 -o output.webp
 
-	// Then convert that one WebP into another WebP with two duplicate frames.
+	// Then convert that one WebP into another WebP.
 	// This should overwrite itself.
 	// The -loop 1 flag is important to prevent the WebP from looping infinitely.
 	// The +0+0+0+0 frame options are to optimize the rendering and make it appear static.

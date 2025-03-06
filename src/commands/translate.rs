@@ -3,8 +3,8 @@ use thirtyfour::prelude::*;
 use url::Url;
 
 use crate::{
-	helpers::{wait_for_element, CreateReplyExt},
 	config::{ApplicationContext, Context},
+	helpers::{wait_for_element, CreateReplyExt},
 };
 use anyhow::{anyhow, Result};
 use fancy_regex::Regex;
@@ -256,6 +256,8 @@ pub async fn translate_text(
 	// Ensure the page is in English.
 	let starting_url = format!("https://www.deepl.com/en/translator");
 	driver.goto(starting_url.clone()).await?;
+
+	println!("Firefox started.");
 
 	// The page is done loading when the glossary button is clickable.
 	let glossary_button =

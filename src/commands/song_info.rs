@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::LazyLock};
+use std::{collections::HashMap, sync::LazyLock, time::Duration};
 
 use anyhow::{anyhow, Result};
 use byte_unit::rust_decimal::prelude::ToPrimitive;
@@ -7,23 +7,29 @@ use inline_format::format;
 use phf::phf_map;
 use poise::{
 	serenity_prelude::{
+		futures::future::{self, Either},
 		CreateActionRow, CreateAllowedMentions, CreateAttachment,
-		CreateButton, CreateEmbed, Message,
+		CreateButton, CreateEmbed, FutureExt, Message,
 	},
 	CreateReply, Modal,
 };
 use regex::Regex;
+use thirtyfour::{
+	prelude::{ElementQueryable, ElementWaitable},
+	By, DesiredCapabilities, WebDriver,
+};
 use url::Url;
 
 use crate::{
 	config::{ApplicationContext, Color, Context},
-	helpers::escape_markdown,
+	helpers::{escape_markdown, wait_for_element},
 };
 
 static PLATFORM_CAPITALIZATIONS: phf::Map<&'static str, &'static str> = phf_map! {
 	"Youtube" => "YouTube",
 	"Youtube Music" => "YouTube Music",
 	"Itunes" => "iTunes",
+	"Soundcloud" => "SoundCloud",
 };
 
 #[derive(Debug, Clone)]
@@ -89,11 +95,11 @@ pub async fn get_song_platform_data(
 			thumbnail_url: entity["thumbnailUrl"]
 				.as_str()
 				.map(|s| s.to_string()),
-			thumbnail_quality: entity["thumbnailWidth"]
-				.as_u64()
-				.and_then(|w| {
+			thumbnail_quality: entity["thumbnailWidth"].as_u64().and_then(
+				|w| {
 					(w * entity["thumbnailHeight"].as_u64().unwrap()).to_u32()
-				}),
+				},
+			),
 		});
 	}
 
@@ -188,7 +194,8 @@ pub async fn build_song_info_message(
 				.to_rgb8()
 				.into_raw();
 
-			get_palette(&color_bytes[..], ColorFormat::Rgb, 10, 2)?.first()
+			get_palette(&color_bytes[..], ColorFormat::Rgb, 10, 2)?
+				.first()
 				// u8 u8 u8 to u32
 				.map(|color| {
 					Color(
@@ -226,6 +233,67 @@ pub async fn build_song_info_message(
 	);
 
 	Ok(reply)
+}
+
+/// Uses Firefox to search https://odesli.co/.
+pub async fn get_song_link_searchable_link(query: String) -> Result<Url> {
+	// Search input:
+	// #search-page-downshift-input
+	// Result:
+	// #search-page-downshift-item-0 a
+
+	println!("Starting Firefox.");
+
+	let mut caps = DesiredCapabilities::firefox();
+	// If in debug mode, run non-headless.
+	// Look at him he has Smitty Werbenjägermanjensen's hat.
+	if !cfg!(debug_assertions) {
+		caps.set_headless()?;
+	}
+	// caps.set_log_level(LogLevel::Trace)?;
+	let driver = WebDriver::new("http://localhost:4444", caps).await?;
+
+	let starting_url = format!("https://odesli.co/");
+	driver.goto(starting_url.clone()).await?;
+
+	println!("Firefox started.");
+
+	// The page is done loading when the search input is clickable.
+	let search_input =
+		wait_for_element(&driver, "#search-page-downshift-input").await?;
+	search_input.wait_until().clickable().await?;
+	// Type the song name, space, artist name.
+	search_input.send_keys(&query).await?;
+
+	// Wait for the search results to load.
+	// OR if the page contains the text "No results found".
+	let first_search_result =
+		wait_for_element(&driver, "#search-page-downshift-item-0 a");
+	let no_results_text = driver
+		.query(By::XPath("//div[contains(text(), 'No results found')]"))
+		.wait(Duration::from_secs(60), Duration::from_millis(10));
+	let no_results_text = no_results_text.first();
+
+	let result =
+		future::select(first_search_result.boxed(), no_results_text.boxed())
+			.await;
+
+	match result {
+		Either::Left((Ok(first_search_result), _)) => {
+			// Get the URL.
+			let url = first_search_result.attr("href").await?;
+
+			if let Some(url) = url {
+				Ok(Url::parse(&url)?)
+			} else {
+				Err(anyhow!("No search results found."))
+			}
+		}
+		Either::Left((_, _)) => {
+			Err(anyhow!("Fatal error finding search results."))
+		}
+		Either::Right((_, _)) => Err(anyhow!("No search results found.")),
+	}
 }
 
 static LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -311,7 +379,9 @@ pub async fn song_info_context_menu(
 )]
 pub async fn song_info(
 	ctx: Context<'_>,
-	#[description = "The link to the song to look up."] url: Url,
+	#[description = "The link to the song to look up."] url: Option<Url>,
+	#[description = "The search query to look up the song with."]
+	query: Option<String>,
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
@@ -323,9 +393,33 @@ pub async fn song_info(
 		ctx.defer().await?;
 	}
 
-	ctx.send(
-		build_song_info_message(&ctx, url, None, None, ephemeral).await?,
-	)
-	.await?;
+	match (url, query) {
+		(Some(url), None) => {
+			ctx.send(
+				build_song_info_message(&ctx, url, None, None, ephemeral)
+					.await?,
+			)
+			.await?;
+		}
+		(None, Some(query)) => {
+			ctx.send(
+				build_song_info_message(
+					&ctx,
+					get_song_link_searchable_link(query).await?,
+					None,
+					None,
+					ephemeral,
+				)
+				.await?,
+			)
+			.await?;
+		}
+		(None, None) => {
+			return Err(anyhow!("No URL or query provided."));
+		}
+		(Some(_), Some(_)) => {
+			return Err(anyhow!("Only provide a URL or a query, not both."));
+		}
+	}
 	Ok(())
 }

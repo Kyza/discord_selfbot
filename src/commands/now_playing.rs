@@ -1,10 +1,13 @@
 use anyhow::{anyhow, Result};
 use byte_unit::rust_decimal::prelude::ToPrimitive;
-use inline_format::format;
+use inline_format::{format, println};
 use serde::Deserialize;
 use url::Url;
 
-use crate::{commands::build_song_info_message, config::Context};
+use crate::{
+	commands::{build_song_info_message, get_song_link_searchable_link},
+	config::Context,
+};
 
 #[derive(Debug, Clone)]
 pub struct PlayingNow {
@@ -88,18 +91,31 @@ pub async fn now_playing(
 		.json::<PlayingNow>()
 		.await?;
 
-	if playing_now_data.origin_url.is_none() {
-		return Err(anyhow!("No song is currently playing."));
-	}
+	println!(playing_now_data:#?);
+
+	let url = if let Some(playing_now_data) = playing_now_data.origin_url {
+		Url::parse(&playing_now_data)?
+	} else {
+		let search_query = match (
+			playing_now_data.track_name.clone(),
+			playing_now_data.artist_name.clone(),
+		) {
+			(Some(track_name), Some(artist_name)) => {
+				format!(track_name, " ", artist_name)
+			}
+			(Some(track_name), None) => track_name,
+			(None, Some(artist_name)) => artist_name,
+			_ => Err(anyhow!("No song is currently playing."))?,
+		};
+		get_song_link_searchable_link(search_query).await?
+	};
 
 	ctx.send(
 		build_song_info_message(
 			&ctx,
-			Url::parse(&playing_now_data.origin_url.ok_or(anyhow!(
-				"The song link from ListenBrainz isn't a valid URL."
-			))?)?,
-			playing_now_data.track_name.clone(),
-			playing_now_data.artist_name.clone(),
+			url,
+			playing_now_data.track_name,
+			playing_now_data.artist_name,
 			ephemeral,
 		)
 		.await?,
