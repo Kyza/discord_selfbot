@@ -1,7 +1,36 @@
 use anyhow::Error;
+use chrono::{DateTime, Local};
+use chrono_tz::Tz;
 use poise::serenity_prelude::{self as serenity, Colour};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, fs};
+
+#[derive(Debug, Clone)]
+pub struct TimeZoneMiddleman(Tz);
+impl TimeZoneMiddleman {
+	pub fn local(&self) -> DateTime<Tz> {
+		Local::now().with_timezone(&self.0)
+	}
+}
+impl Serialize for TimeZoneMiddleman {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		serializer.serialize_str(self.0.name())
+	}
+}
+impl<'de> Deserialize<'de> for TimeZoneMiddleman {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: serde::Deserializer<'de>,
+	{
+		let s = String::deserialize(deserializer)?;
+		s.parse::<Tz>()
+			.map(TimeZoneMiddleman)
+			.map_err(serde::de::Error::custom)
+	}
+}
 
 /// No more British.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,7 +75,7 @@ pub struct Config {
 	// pub wolfram_alpha_simple_app_id: Option<String>,
 	// pub wolfram_alpha_short_app_id: Option<String>,
 	pub deepl_target_language: String,
-	pub timezone: String,
+	pub timezone: TimeZoneMiddleman,
 	pub embed_color: Color,
 	pub randomorg_api_key: Option<String>,
 	pub listenbrainz_user: Option<String>,

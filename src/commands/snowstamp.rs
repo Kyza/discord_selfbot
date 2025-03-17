@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use chrono::{Datelike, Local, Timelike};
+use chrono::{Datelike, Timelike};
 use poise::{
 	serenity_prelude::{
 		self as serenity, async_trait, CreateAllowedMentions,
@@ -8,7 +8,7 @@ use poise::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::config::Context;
+use crate::config::{Config, Context};
 
 #[derive(Debug, Serialize, Deserialize, Clone, ChoiceParameter)]
 enum Month {
@@ -105,8 +105,8 @@ struct InputTime {
 	second: Option<u32>,
 }
 impl InputTime {
-	fn now() -> Self {
-		let now = Local::now();
+	fn now(config: &Config) -> Self {
+		let now = config.timezone.local();
 		Self {
 			year: Some(now.year()),
 			month: Some(now.month()),
@@ -116,11 +116,11 @@ impl InputTime {
 			second: Some(now.second()),
 		}
 	}
-	fn to_timestamp(&self) -> Result<i64> {
-		// Get the current time
-		let mut datetime = Local::now();
+	fn to_timestamp(&self, config: &Config) -> Result<i64> {
+		// Get the current time.
+		let mut datetime = config.timezone.local();
 
-		// Determine year
+		// Determine year.
 		datetime = datetime
 			.with_year(match self.year {
 				Some(x) => x,
@@ -136,7 +136,7 @@ impl InputTime {
 			})
 			.ok_or(anyhow!(""))?;
 
-		// Determine month
+		// Determine month.
 		datetime = datetime
 			.with_month(match self.month {
 				Some(x) => x,
@@ -151,7 +151,7 @@ impl InputTime {
 			})
 			.ok_or(anyhow!(""))?;
 
-		// Determine day
+		// Determine day.
 		datetime = datetime
 			.with_day(match self.day {
 				Some(x) => x,
@@ -165,7 +165,7 @@ impl InputTime {
 			})
 			.ok_or(anyhow!(""))?;
 
-		// Determine hour
+		// Determine hour.
 		datetime = datetime
 			.with_hour(match self.hour {
 				Some(x) => x,
@@ -176,7 +176,7 @@ impl InputTime {
 			})
 			.ok_or(anyhow!(""))?;
 
-		// Determine minute
+		// Determine minute.
 		datetime = datetime
 			.with_minute(match self.minute {
 				Some(x) => x,
@@ -185,7 +185,7 @@ impl InputTime {
 			})
 			.ok_or(anyhow!(""))?;
 
-		// Determine second
+		// Determine second.
 		datetime = datetime
 			.with_second(self.second.unwrap_or(0))
 			.ok_or(anyhow!(""))?; // Default to 0 for second
@@ -241,9 +241,10 @@ pub async fn snowstamp(
 
 	let id_or_time = match (id, year, month, day, hour, minute, second) {
 		(Some(id), None, None, None, None, None, None) => IdOrTime::Id(id),
-		(None, None, None, None, None, None, None) => {
-			IdOrTime::Time(InputTime::now().to_timestamp()?)
-		}
+		(None, None, None, None, None, None, None) => IdOrTime::Time(
+			InputTime::now(&ctx.data().config)
+				.to_timestamp(&ctx.data().config)?,
+		),
 		(None, year, month, day, hour, minute, second) => IdOrTime::Time(
 			InputTime {
 				year,
@@ -253,7 +254,7 @@ pub async fn snowstamp(
 				minute,
 				second,
 			}
-			.to_timestamp()?,
+			.to_timestamp(&ctx.data().config)?,
 		),
 		_ => IdOrTime::None,
 	};
