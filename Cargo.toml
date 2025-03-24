@@ -41,3 +41,7 @@ color-thief = "0.2.2"
 # https://github.com/Kyza/discord_selfbot/security/dependabot/1
 # rust-openssl ssl::select_next_proto use after free
 openssl = "0.10.70"
+
+# https://github.com/Kyza/discord_selfbot/security/dependabot/2
+# Some AES functions may panic when overflow checking is enabled in ring
+ring = "0.17.12"
