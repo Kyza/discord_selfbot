@@ -61,6 +61,17 @@ pub async fn get_song_platform_data(
 		.json::<serde_json::Value>()
 		.await?;
 
+	if let Some(status_code) = response["statusCode"].as_u64() {
+		if status_code != 200 {
+			let error_code =
+				response["code"].as_str().unwrap_or("unknown_code");
+			return Err(anyhow!(
+				"song.link API returned an error: `{}`",
+				error_code
+			));
+		}
+	}
+
 	let links_by_platform = response["linksByPlatform"].clone();
 	let links_by_platform = links_by_platform
 		.as_object()
@@ -297,7 +308,7 @@ pub async fn get_song_link_searchable_link(query: String) -> Result<Url> {
 }
 
 static LINK_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-	Regex::new(r#"^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])"#).unwrap()
+	Regex::new(r#"(https?:\/\/[^\s<]+[^<.,:;"')\]\s])"#).unwrap()
 });
 
 #[derive(Debug, Modal)]
