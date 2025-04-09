@@ -4,46 +4,38 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-log = "0.4.22"
+log = "0.4"
 poise = { git = "https://github.com/serenity-rs/poise", rev = "22b5b01" }
-reqwest = { version = "0.12.8", features = ["json"] }
-serde = "1.0.210"
-serde_json = "1.0.128"
-serde_plain = "1.0.2"
-tokio = { version = "1.40.0", features = ["rt-multi-thread"] }
-url = "2.5.2"
-anyhow = "1.0.89"
-byte-unit = "5.1.4"
-tempfile = "3.13.0"
-urlencoding = "2.1.3"
+reqwest = { version = "0.12", features = ["json"] }
+serde = "1.0"
+serde_json = "1.0"
+serde_plain = "1.0"
+tokio = { version = "1.40", features = ["rt-multi-thread"] }
+url = "2.5"
+anyhow = "1.0"
+byte-unit = "5.1"
+tempfile = "3.13"
+urlencoding = "2.1"
 caith = { git = "https://github.com/Kyza/caith.git", rev = "fed75b3" }
-chrono = "0.4.38"
-chrono-tz = { version = "0.10.1", features = ["serde"] }
-heck = "0.5.0"
-indexmap = "2.6.0"
-rand = "0.8.5"
-tracing = "0.1.40"
+chrono = "0.4"
+chrono-tz = { version = "0.10", features = ["serde"] }
+heck = "0.5"
+indexmap = "2.6"
+rand = "0.8"
+tracing = "0.1"
 syn = { version = "2.0.89", features = ["full"] }
-regex = "1.11.1"
-inline_format = "0.2.3"
-rusty-tesseract = "1.1.10"
-image = "0.25.5"
-thirtyfour = "0.35.0"
-fancy-regex = "0.14.0"
-ron = "0.8.1"
+regex = "1.11"
+inline_format = "0.2"
+rusty-tesseract = "1.1"
+image = "0.25"
+thirtyfour = "0.35"
+fancy-regex = "0.14"
+ron = "0.8"
 phf = { version = "0.11", default-features = false, features = ["macros"] }
-color-thief = "0.2.2"
+color-thief = "0.2"
 # kalosm = { version = "0.3.2", features = ["vision", "cuda"] }
 # ort-sys = "=2.0.0-rc.8"
 # image = "0.24.7"
 # cudarc = { version = "=0.12.1", features = ["cuda-version-from-build-system"] }
-bon = "3.5.1"
-mimalloc = "0.1.46"
-
-# https://github.com/Kyza/discord_selfbot/security/dependabot/1
-# rust-openssl ssl::select_next_proto use after free
-openssl = "0.10.70"
-
-# https://github.com/Kyza/discord_selfbot/security/dependabot/2
-# Some AES functions may panic when overflow checking is enabled in ring
-ring = "0.17.12"
+bon = "3.5"
+mimalloc = "0.1"

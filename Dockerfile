@@ -6,7 +6,7 @@
 
 # Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
 
-ARG RUST_VERSION=1.83.0
+ARG RUST_VERSION=1.86.0
 ARG APP_NAME=discord_selfbot
 
 ################################################################################
@@ -17,7 +17,7 @@ ARG APP_NAME
 WORKDIR /app
 
 # Install host build dependencies.
-RUN apk add --no-cache clang lld musl-dev git openssl openssl-dev openssl-libs-static
+RUN apk add --no-cache clang lld musl-dev openssl openssl-dev openssl-libs-static
 
 # Build the application.
 # Leverage a cache mount to /usr/local/cargo/registry/
@@ -52,7 +52,7 @@ FROM alpine:3.21 AS final
 USER root
 
 # Install runtime dependencies.
-RUN apk add --no-cache yt-dlp yt-dlp-core ffmpeg ffmpeg-libs libwebp libwebp-tools libjxl libjxl-tools libavif libavif-apps tesseract-ocr tesseract-ocr-data-eng geckodriver firefox sudo
+RUN apk add --no-cache yt-dlp=2025.03.31-r0 yt-dlp-core=2025.03.31-r0 ffmpeg ffmpeg-libs libwebp libwebp-tools libjxl libjxl-tools libavif libavif-apps tesseract-ocr tesseract-ocr-data-eng geckodriver firefox sudo
 
 # Install fonts.
 RUN apk add --no-cache font-terminus font-inconsolata font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-vollkorn font-misc-cyrillic font-mutt-misc font-screen-cyrillic font-winitzki-cyrillic font-cronyx-cyrillic font-noto-thai font-noto-tibetan font-ipa font-sony-misc font-jis-misc font-isas-misc font-arabic-misc font-noto-arabic font-noto-armenian font-noto-cherokee font-noto-devanagari font-noto-ethiopic font-noto-georgian font-noto-hebrew font-noto-lao font-noto-malayalam font-noto-tamil font-noto-thaana font-twemoji
