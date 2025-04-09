@@ -27,4 +27,5 @@ crunch![
 	flip,
 	now_playing,
 	song_info,
+	source,
 ];

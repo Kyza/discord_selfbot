@@ -233,6 +233,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "bon"
+version = "3.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65268237be94042665b92034f979c42d431d2fd998b49809543afe3e66abad1c"
+dependencies = [
+ "bon-macros",
+ "rustversion",
+]
+
+[[package]]
+name = "bon-macros"
+version = "3.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "803c95b2ecf650eb10b5f87dda6b9f6a1b758cee53245e2b7b825c9b3803a443"
+dependencies = [
+ "darling",
+ "ident_case",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 2.0.98",
+]
+
+[[package]]
 name = "borsh"
 version = "1.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -651,6 +676,7 @@ name = "discord_selfbot"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bon",
  "byte-unit",
  "caith",
  "chrono",
@@ -662,6 +688,7 @@ dependencies = [
  "indexmap",
  "inline_format",
  "log",
+ "mimalloc",
  "openssl",
  "phf",
  "poise",
@@ -1527,6 +1554,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "libmimalloc-sys"
+version = "0.1.42"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec9d6fac27761dabcd4ee73571cdb06b7022dc99089acbe5435691edffaac0f4"
+dependencies = [
+ "cc",
+ "libc",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.4.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1578,6 +1615,15 @@ name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
+
+[[package]]
+name = "mimalloc"
+version = "0.1.46"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "995942f432bbb4822a7e9c3faa87a695185b0d09273ba85f097b54f4e458f2af"
+dependencies = [
+ "libmimalloc-sys",
+]
 
 [[package]]
 name = "mime"
@@ -2005,6 +2051,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77957b295656769bb8ad2b6a6b09d897d94f05c41b069aede1fcdaa675eaea04"
 dependencies = [
  "zerocopy",
+]
+
+[[package]]
+name = "prettyplease"
+version = "0.2.32"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "664ec5419c51e34154eec046ebcba56312d5a2fc3b09a06da188e1ad21afadf6"
+dependencies = [
+ "proc-macro2",
+ "syn 2.0.98",
 ]
 
 [[package]]

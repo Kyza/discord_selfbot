@@ -7,6 +7,7 @@ use url::Url;
 use crate::{
 	commands::{build_song_info_message, get_song_link_searchable_link},
 	config::Context,
+	youtube_downloader::{DownloadFormat, YouTubeDownloader},
 };
 
 #[derive(Debug, Clone)]
@@ -64,6 +65,8 @@ pub async fn now_playing(
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
+	#[description = "Whether or not to download the song. (default: true)"]
+	download: Option<bool>,
 ) -> Result<()> {
 	let ephemeral = ephemeral.unwrap_or(false);
 	if ephemeral {
@@ -93,8 +96,34 @@ pub async fn now_playing(
 
 	println!(playing_now_data:#?);
 
-	let url = if let Some(playing_now_data) = playing_now_data.origin_url {
-		Url::parse(&playing_now_data)?
+	let mut youtube_downloader = if download.is_none_or(|d| !d) {
+		Some(
+			YouTubeDownloader::builder()
+				.format(DownloadFormat::Audio)
+				.build(),
+		)
+	} else {
+		None
+	};
+
+	let url = if let Some(playing_now_data_url) = playing_now_data.origin_url
+	{
+		let url = Url::parse(&playing_now_data_url)?;
+		if let Some(youtube_downloader) = youtube_downloader.as_mut() {
+			match url.host_str() {
+				Some("youtube.com")
+				| Some("www.youtube.com")
+				| Some("youtu.be")
+				| Some("www.youtu.be")
+				| Some("music.youtube.com") => {
+					println!("Started early download.");
+					youtube_downloader.url = Some(url.clone());
+					let _ = youtube_downloader.start_download();
+				}
+				_ => {}
+			}
+		}
+		url
 	} else {
 		let search_query = match (
 			playing_now_data.track_name.clone(),
@@ -116,6 +145,7 @@ pub async fn now_playing(
 			url,
 			playing_now_data.track_name,
 			playing_now_data.artist_name,
+			youtube_downloader,
 			ephemeral,
 		)
 		.await?,

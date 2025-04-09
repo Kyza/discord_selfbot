@@ -37,6 +37,7 @@ color-thief = "0.2.2"
 # ort-sys = "=2.0.0-rc.8"
 # image = "0.24.7"
 # cudarc = { version = "=0.12.1", features = ["cuda-version-from-build-system"] }
+bon = "3.5.1"
 
 # https://github.com/Kyza/discord_selfbot/security/dependabot/1
 # rust-openssl ssl::select_next_proto use after free
@@ -45,3 +46,4 @@ openssl = "0.10.70"
 # https://github.com/Kyza/discord_selfbot/security/dependabot/2
 # Some AES functions may panic when overflow checking is enabled in ring
 ring = "0.17.12"
+mimalloc = "0.1.46"

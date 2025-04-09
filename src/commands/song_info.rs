@@ -22,7 +22,8 @@ use url::Url;
 
 use crate::{
 	config::{ApplicationContext, Color, Context},
-	helpers::{escape_markdown, wait_for_element},
+	helpers::{escape_markdown, wait_for_element, CreateReplyExt},
+	youtube_downloader::{DownloadFormat, YouTubeDownloader},
 };
 
 static PLATFORM_CAPITALIZATIONS: phf::Map<&'static str, &'static str> = phf_map! {
@@ -127,6 +128,7 @@ pub async fn build_song_info_message(
 	link: Url,
 	song_name: Option<String>,
 	artist_name: Option<String>,
+	mut youtube_downloader: Option<YouTubeDownloader>,
 	ephemeral: bool,
 ) -> Result<CreateReply> {
 	let mut reply = CreateReply::default()
@@ -135,6 +137,36 @@ pub async fn build_song_info_message(
 
 	let (page_url, mut platforms) =
 		get_song_platform_data(ctx, link.as_ref()).await?;
+
+	if let Some(youtube_downloader) = youtube_downloader.as_mut() {
+		// Search for a YouTube link...
+		let youtube_link = 'ytl: {
+			if let Some(url) = youtube_downloader.get_url() {
+				break 'ytl Some(url);
+			}
+			for platform in platforms.iter_mut() {
+				match platform.platform_name.as_str() {
+					"YouTube" | "YouTube Music" => {
+						break 'ytl Some(
+							Url::parse(platform.url.as_str()).unwrap(),
+						);
+					}
+					_ => {}
+				};
+			}
+			None
+		};
+		if let Some(youtube_link) = youtube_link {
+			// Start the song download.
+			if !youtube_downloader.is_downloading() {
+				youtube_downloader.url = Some(youtube_link);
+			}
+			youtube_downloader.format = DownloadFormat::Audio;
+			let _ = youtube_downloader.start_download();
+		} else {
+			println!("No YouTube link found. Can't download song.");
+		}
+	};
 
 	let most_common_song_name = song_name
 		.or_else(|| {
@@ -243,6 +275,29 @@ pub async fn build_song_info_message(
 			.collect::<Vec<_>>(),
 	);
 
+	if let Some(youtube_downloader) = youtube_downloader {
+		if youtube_downloader.was_started() {
+			let error = youtube_downloader.get_error();
+			if let Ok(file_bytes) = youtube_downloader.wait().await {
+				reply = reply.attachment(CreateAttachment::bytes(
+					file_bytes,
+					format!(
+						most_common_song_name,
+						" by ", most_common_artist_name, ".mp3"
+					),
+				));
+			} else if let Some(error) = error {
+				reply = reply.content_or_attachment(|is_content| {
+					if is_content {
+						format!("```\n", error:#, "\n```")
+					} else {
+						format!(error:#)
+					}
+				})
+			}
+		}
+	}
+
 	Ok(reply)
 }
 
@@ -317,6 +372,8 @@ struct SongInfoModal {
 	#[name = "URL Index"]
 	#[placeholder = "The index of the URL to use. (default: 0)"]
 	url_index: Option<String>,
+	#[placeholder = "Whether or not to download the song. (default: true)"]
+	download: Option<String>,
 	#[placeholder = "Whether or not to show the message."]
 	ephemeral: Option<String>,
 }
@@ -342,6 +399,12 @@ pub async fn song_info_context_menu(
 		Some("false") => false,
 		Some(_) => true,
 		None => false,
+	};
+
+	let download = match data.download.as_deref() {
+		Some("false") => false,
+		Some(_) => true,
+		None => true,
 	};
 
 	let urls = LINK_REGEX
@@ -371,6 +434,11 @@ pub async fn song_info_context_menu(
 			url,
 			None,
 			None,
+			if download {
+				Some(YouTubeDownloader::builder().build())
+			} else {
+				None
+			},
 			ephemeral,
 		)
 		.await?,
@@ -393,6 +461,8 @@ pub async fn song_info(
 	#[description = "The link to the song to look up."] url: Option<Url>,
 	#[description = "The search query to look up the song with."]
 	query: Option<String>,
+	#[description = "Whether or not to download the song. (default: true)"]
+	download: Option<bool>,
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
@@ -404,11 +474,24 @@ pub async fn song_info(
 		ctx.defer().await?;
 	}
 
+	let youtube_downloader = if download.is_none_or(|d| !d) {
+		Some(YouTubeDownloader::builder().build())
+	} else {
+		None
+	};
+
 	match (url, query) {
 		(Some(url), None) => {
 			ctx.send(
-				build_song_info_message(&ctx, url, None, None, ephemeral)
-					.await?,
+				build_song_info_message(
+					&ctx,
+					url,
+					None,
+					None,
+					youtube_downloader,
+					ephemeral,
+				)
+				.await?,
 			)
 			.await?;
 		}
@@ -419,6 +502,7 @@ pub async fn song_info(
 					get_song_link_searchable_link(query).await?,
 					None,
 					None,
+					youtube_downloader,
 					ephemeral,
 				)
 				.await?,

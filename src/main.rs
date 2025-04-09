@@ -1,5 +1,9 @@
+#[global_allocator]
+static ALLOC: MiMalloc = MiMalloc;
+
 use config::{BotData, Config};
 use inline_format::eprintln;
+use mimalloc::MiMalloc;
 use poise::serenity_prelude as serenity;
 
 pub mod commands;
@@ -7,6 +11,7 @@ pub mod config;
 pub mod helpers;
 pub mod media;
 pub mod os_command;
+pub mod youtube_downloader;
 
 #[tokio::main]
 async fn main() {
@@ -37,6 +42,7 @@ async fn main() {
 		commands::flip(),
 		commands::now_playing(),
 		commands::song_info(),
+		commands::source(),
 	];
 
 	// Add the context menu commands if they're in the config.

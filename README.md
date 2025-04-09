@@ -58,6 +58,7 @@ As long as you don't change any files you can use `update_restart.cmd` to pull t
 - [x] `/jxl` - Converts an image to JXL.
    - [x] Context menu supported.
 - [x] `/now_playing` - Shows what you're currently listening to from the ListenBrainz API.
+   - [x] YouTube song downloading supported.
 - [x] `/ocr` - Runs OCR on an image.
    - This sucks currently. Someone please find me a decent API or library.
 - [x] `/roll` - Rolls dice notation.
@@ -66,6 +67,8 @@ As long as you don't change any files you can use `update_restart.cmd` to pull t
 - [x] `/snowstamp` - Lets you easily create a timestamp from an ID or a datetime.
 - [x] `/song_info` - Shows song information from a given link.
    - [x] Context menu supported.
+   - [x] YouTube song downloading supported.
+- [x] `/source` - Sends the link to the bot's source code.
 - [x] `/translate` - Translates text using DeepL.
    - [x] Context menu supported.
    - DeepL's API signup has been broken for me for the past few months, so this uses `thirtyfour` and `geckodriver`.
