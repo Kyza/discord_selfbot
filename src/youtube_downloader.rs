@@ -26,6 +26,26 @@ pub struct YouTubeDownloader {
 
 #[bon]
 impl YouTubeDownloader {
+	pub fn is_valid_url(url: &Url) -> bool {
+		url.host_str().map_or(false, |host| match host {
+			"youtube.com" | "www.youtube.com" | "youtu.be"
+			| "www.youtu.be" | "music.youtube.com" => true,
+			_ => false,
+		})
+	}
+	pub fn is_youtube_url(url: &Url) -> bool {
+		url.host_str().map_or(false, |host| match host {
+			"youtube.com" | "www.youtube.com" | "youtu.be" => true,
+			_ => false,
+		})
+	}
+	pub fn is_youtube_music_url(url: &Url) -> bool {
+		url.host_str().map_or(false, |host| match host {
+			"www.youtu.be" | "music.youtube.com" => true,
+			_ => false,
+		})
+	}
+
 	#[builder]
 	pub fn new(url: Option<Url>, format: Option<DownloadFormat>) -> Self {
 		YouTubeDownloader {

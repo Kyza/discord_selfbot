@@ -140,13 +140,19 @@ pub async fn build_song_info_message(
 
 	if let Some(youtube_downloader) = youtube_downloader.as_mut() {
 		// Search for a YouTube link...
+		// Priority: YouTube Music > YouTube
 		let youtube_link = 'ytl: {
 			if let Some(url) = youtube_downloader.get_url() {
 				break 'ytl Some(url);
 			}
+			let mut youtube_url = None;
 			for platform in platforms.iter_mut() {
 				match platform.platform_name.as_str() {
-					"YouTube" | "YouTube Music" => {
+					"YouTube" => {
+						youtube_url =
+							Some(Url::parse(platform.url.as_str()).unwrap());
+					}
+					"YouTube Music" => {
 						break 'ytl Some(
 							Url::parse(platform.url.as_str()).unwrap(),
 						);
@@ -154,7 +160,7 @@ pub async fn build_song_info_message(
 					_ => {}
 				};
 			}
-			None
+			youtube_url
 		};
 		if let Some(youtube_link) = youtube_link {
 			// Start the song download.

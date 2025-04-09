@@ -110,17 +110,11 @@ pub async fn now_playing(
 	{
 		let url = Url::parse(&playing_now_data_url)?;
 		if let Some(youtube_downloader) = youtube_downloader.as_mut() {
-			match url.host_str() {
-				Some("youtube.com")
-				| Some("www.youtube.com")
-				| Some("youtu.be")
-				| Some("www.youtu.be")
-				| Some("music.youtube.com") => {
-					println!("Started early download.");
-					youtube_downloader.url = Some(url.clone());
-					let _ = youtube_downloader.start_download();
-				}
-				_ => {}
+			// Only download if the URL is a YouTube Music URL.
+			// Sometimes YouTube doesn't serve audio only.
+			if YouTubeDownloader::is_youtube_music_url(&url) {
+				youtube_downloader.url = Some(url.clone());
+				let _ = youtube_downloader.start_download();
 			}
 		}
 		url
