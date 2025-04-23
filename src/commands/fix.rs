@@ -106,14 +106,14 @@ pub async fn fix(
 				instagram_view.to_prefix()
 			)))?;
 			new_url.set_query(None);
-			ctx.send(reply.content(new_url)).await?;
+			ctx.send(reply.content(new_url.to_string())).await?;
 		}
 		Some(Host::Domain("tiktok.com"))
 		| Some(Host::Domain("www.tiktok.com")) => {
 			let mut new_url = url.clone();
 			new_url.set_host(Some("tnktok.com"))?;
 			new_url.set_query(tiktok_view.to_query());
-			ctx.send(reply.content(new_url)).await?;
+			ctx.send(reply.content(new_url.to_string())).await?;
 		}
 		Some(Host::Domain("reddit.com"))
 		| Some(Host::Domain("redd.it"))
@@ -122,7 +122,7 @@ pub async fn fix(
 			let mut new_url = url.clone();
 			new_url.set_host(Some("rxddit.com"))?;
 			new_url.set_query(None);
-			ctx.send(reply.content(new_url)).await?;
+			ctx.send(reply.content(new_url.to_string())).await?;
 		}
 		Some(Host::Domain("www.twitter.com"))
 		| Some(Host::Domain("twitter.com"))
@@ -143,7 +143,7 @@ pub async fn fix(
 				}
 			));
 			new_url.set_query(None);
-			ctx.send(reply.content(new_url)).await?;
+			ctx.send(reply.content(new_url.to_string())).await?;
 		}
 		Some(Host::Domain("www.bsky.app"))
 		| Some(Host::Domain("bsky.app")) => {
@@ -162,7 +162,7 @@ pub async fn fix(
 				}
 			));
 			new_url.set_query(None);
-			ctx.send(reply.content(new_url)).await?;
+			ctx.send(reply.content(new_url.to_string())).await?;
 		}
 		Some(_) | None => {
 			ctx.send(reply.content("Use a real website idiot.")).await?;

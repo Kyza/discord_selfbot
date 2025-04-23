@@ -5,7 +5,10 @@ use serde::Deserialize;
 use url::Url;
 
 use crate::{
-	commands::{build_song_info_message, get_song_link_searchable_link},
+	commands::{
+		build_song_info_message, get_song_link_searchable_link,
+		song_interactions,
+	},
 	config::Context,
 	youtube_downloader::{DownloadFormat, YouTubeDownloader},
 };
@@ -65,8 +68,6 @@ pub async fn now_playing(
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
-	#[description = "Whether or not to download the song. (default: true)"]
-	download: Option<bool>,
 ) -> Result<()> {
 	let ephemeral = ephemeral.unwrap_or(false);
 	if ephemeral {
@@ -96,26 +97,18 @@ pub async fn now_playing(
 
 	println!(playing_now_data:#?);
 
-	let mut youtube_downloader = if download.is_none_or(|d| !d) {
-		Some(
-			YouTubeDownloader::builder()
-				.format(DownloadFormat::Audio)
-				.build(),
-		)
-	} else {
-		None
-	};
+	let mut youtube_downloader = YouTubeDownloader::builder()
+		.format(DownloadFormat::Audio)
+		.build();
 
 	let url = if let Some(playing_now_data_url) = playing_now_data.origin_url
 	{
 		let url = Url::parse(&playing_now_data_url)?;
-		if let Some(youtube_downloader) = youtube_downloader.as_mut() {
-			// Only download if the URL is a YouTube Music URL.
-			// Sometimes YouTube doesn't serve audio only.
-			if YouTubeDownloader::is_youtube_music_url(&url) {
-				youtube_downloader.url = Some(url.clone());
-				let _ = youtube_downloader.start_download();
-			}
+		// Only download if the URL is a YouTube Music URL.
+		// Sometimes YouTube doesn't serve audio only.
+		if YouTubeDownloader::is_youtube_music_url(&url) {
+			youtube_downloader.url = Some(url.clone());
+			let _ = youtube_downloader.start_download();
 		}
 		url
 	} else {
@@ -133,17 +126,20 @@ pub async fn now_playing(
 		get_song_link_searchable_link(search_query).await?
 	};
 
-	ctx.send(
-		build_song_info_message(
-			&ctx,
-			url,
-			playing_now_data.track_name,
-			playing_now_data.artist_name,
-			youtube_downloader,
-			ephemeral,
-		)
-		.await?,
+	let (reply, disabled_reply) = build_song_info_message(
+		&ctx,
+		url,
+		playing_now_data.track_name,
+		playing_now_data.artist_name,
+		&mut youtube_downloader,
+		ephemeral,
 	)
 	.await?;
+
+	let message = ctx.send(reply).await?;
+	song_interactions(&ctx, &message, &disabled_reply, youtube_downloader)
+		.await?;
+	message.edit(ctx, disabled_reply).await?;
+
 	Ok(())
 }

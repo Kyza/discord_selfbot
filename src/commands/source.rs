@@ -2,6 +2,7 @@ use anyhow::Result;
 use poise::{
 	serenity_prelude::{
 		CreateActionRow, CreateAllowedMentions, CreateButton,
+		CreateComponent, CreateContainer, MessageFlags,
 	},
 	CreateReply,
 };
@@ -32,10 +33,26 @@ pub async fn source(
 
 	let reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
-		.components(vec![CreateActionRow::Buttons(vec![
-			CreateButton::new_link("https://github.com/Kyza/discord_selfbot")
-				.label("Source Code"),
-		])])
+		.flags(MessageFlags::IS_COMPONENTS_V2)
+		.components(
+			[CreateComponent::Container(
+				CreateContainer::new(
+					[CreateComponent::ActionRow(CreateActionRow::Buttons(
+						[CreateButton::new_link(
+							"https://github.com/Kyza/discord_selfbot",
+						)
+						.label("Source Code")]
+						.to_vec()
+						.into(),
+					))]
+					.to_vec()
+					.to_owned(),
+				)
+				.accent_color(ctx.data().config.embed_color.clone()),
+			)]
+			.to_vec()
+			.to_owned(),
+		)
 		.ephemeral(ephemeral);
 
 	ctx.send(reply).await?;

@@ -1,7 +1,7 @@
 use anyhow::Error;
 use chrono::{DateTime, Local};
 use chrono_tz::Tz;
-use poise::serenity_prelude::{self as serenity, Colour};
+use poise::serenity_prelude::{self as serenity, Colour, Token};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, fs};
 
@@ -68,7 +68,7 @@ impl BotData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-	pub discord_token: String,
+	pub discord_token: Token,
 	pub owner_ids: HashSet<serenity::UserId>,
 	pub application_id: serenity::UserId,
 	pub wolfram_alpha_full_app_id: Option<String>,

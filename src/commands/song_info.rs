@@ -7,11 +7,19 @@ use inline_format::format;
 use phf::phf_map;
 use poise::{
 	serenity_prelude::{
-		futures::future::{self, Either},
-		CreateActionRow, CreateAllowedMentions, CreateAttachment,
-		CreateButton, CreateEmbed, FutureExt, Message,
+		futures::{
+			future::{self, Either},
+			FutureExt,
+		},
+		ComponentInteractionCollector, CreateActionRow,
+		CreateAllowedMentions, CreateAttachment, CreateButton,
+		CreateComponent, CreateContainer, CreateInteractionResponse,
+		CreateInteractionResponseFollowup, CreateInteractionResponseMessage,
+		CreateSection, CreateSectionAccessory, CreateSectionComponent,
+		CreateTextDisplay, CreateThumbnail, CreateUnfurledMediaItem, Message,
+		MessageFlags,
 	},
-	CreateReply, Modal,
+	CreateReply, Modal, ReplyHandle,
 };
 use regex::Regex;
 use thirtyfour::{
@@ -22,7 +30,7 @@ use url::Url;
 
 use crate::{
 	config::{ApplicationContext, Color, Context},
-	helpers::{escape_markdown, wait_for_element, CreateReplyExt},
+	helpers::{escape_markdown, wait_for_element, ContentOrAttachmentExt},
 	youtube_downloader::{DownloadFormat, YouTubeDownloader},
 };
 
@@ -123,56 +131,55 @@ pub async fn get_song_platform_data(
 	))
 }
 
-pub async fn build_song_info_message(
-	ctx: &Context<'_>,
+pub async fn build_song_info_message<'a>(
+	ctx: &Context<'a>,
 	link: Url,
 	song_name: Option<String>,
 	artist_name: Option<String>,
-	mut youtube_downloader: Option<YouTubeDownloader>,
+	youtube_downloader: &mut YouTubeDownloader,
 	ephemeral: bool,
-) -> Result<CreateReply> {
+) -> Result<(CreateReply<'a>, CreateReply<'a>)> {
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
+		.flags(MessageFlags::IS_COMPONENTS_V2)
 		.ephemeral(ephemeral);
 
 	let (page_url, mut platforms) =
 		get_song_platform_data(ctx, link.as_ref()).await?;
 
-	if let Some(youtube_downloader) = youtube_downloader.as_mut() {
-		// Search for a YouTube link...
-		// Priority: YouTube Music > YouTube
-		let youtube_link = 'ytl: {
-			if let Some(url) = youtube_downloader.get_url() {
-				break 'ytl Some(url);
-			}
-			let mut youtube_url = None;
-			for platform in platforms.iter_mut() {
-				match platform.platform_name.as_str() {
-					"YouTube" => {
-						youtube_url =
-							Some(Url::parse(platform.url.as_str()).unwrap());
-					}
-					"YouTube Music" => {
-						break 'ytl Some(
-							Url::parse(platform.url.as_str()).unwrap(),
-						);
-					}
-					_ => {}
-				};
-			}
-			youtube_url
-		};
-		if let Some(youtube_link) = youtube_link {
-			// Start the song download.
-			if !youtube_downloader.is_downloading() {
-				youtube_downloader.url = Some(youtube_link);
-			}
-			youtube_downloader.format = DownloadFormat::Audio;
-			let _ = youtube_downloader.start_download();
-		} else {
-			println!("No YouTube link found. Can't download song.");
+	// Search for a YouTube link...
+	// Priority: YouTube Music > YouTube
+	let youtube_link = 'ytl: {
+		if let Some(url) = youtube_downloader.get_url() {
+			break 'ytl Some(url);
 		}
+		let mut youtube_url = None;
+		for platform in platforms.iter_mut() {
+			match platform.platform_name.as_str() {
+				"YouTube" => {
+					youtube_url =
+						Some(Url::parse(platform.url.as_str()).unwrap());
+				}
+				"YouTube Music" => {
+					break 'ytl Some(
+						Url::parse(platform.url.as_str()).unwrap(),
+					);
+				}
+				_ => {}
+			};
+		}
+		youtube_url
 	};
+	if let Some(youtube_link) = youtube_link {
+		// Start the song download.
+		if !youtube_downloader.is_downloading() {
+			youtube_downloader.url = Some(youtube_link);
+		}
+		youtube_downloader.format = DownloadFormat::Audio;
+		let _ = youtube_downloader.start_download();
+	} else {
+		println!("No YouTube link found. Can't download song.");
+	}
 
 	let most_common_song_name = song_name
 		.or_else(|| {
@@ -202,6 +209,11 @@ pub async fn build_song_info_message(
 				.map(|(song, _)| song.clone())
 		})
 		.unwrap_or("Unknown".to_string());
+
+	youtube_downloader.file_name(format!(
+		most_common_song_name,
+		" by ", most_common_artist_name, ".mp3"
+	));
 
 	// Download it and upload it to Discord.
 	// Sort by largest thumbnail quality first.
@@ -234,7 +246,7 @@ pub async fn build_song_info_message(
 		);
 	}
 
-	let embed_color = {
+	let accent_color = {
 		if let Some(thumbnail_url_bytes) = thumbnail_url_bytes {
 			use color_thief::{get_palette, ColorFormat};
 
@@ -258,53 +270,74 @@ pub async fn build_song_info_message(
 			ctx.data().config.embed_color.clone()
 		}
 	};
-	reply = reply.embed(
-		CreateEmbed::new()
-			.title(escape_markdown(&most_common_song_name))
-			.url(page_url) // Pick the one with the highest resolution.
-			.thumbnail("attachment://thumbnail.png")
-			.description(escape_markdown(&most_common_artist_name))
-			.color(embed_color),
-	);
-
-	reply = reply.components(
-		platforms
-			.iter()
-			.map(|platform| {
-				CreateButton::new_link(platform.url.clone())
-					.label(platform.platform_name.clone())
-			})
-			.collect::<Vec<_>>()
-			// 5 is the limit of buttons per row.
-			.chunks(5)
-			.map(|buttons| CreateActionRow::Buttons(buttons.to_vec()))
-			.collect::<Vec<_>>(),
-	);
-
-	if let Some(youtube_downloader) = youtube_downloader {
-		if youtube_downloader.was_started() {
-			let error = youtube_downloader.get_error();
-			if let Ok(file_bytes) = youtube_downloader.wait().await {
-				reply = reply.attachment(CreateAttachment::bytes(
-					file_bytes,
-					format!(
-						most_common_song_name,
-						" by ", most_common_artist_name, ".mp3"
+	let make_components = |disabled| {
+		let mut components =
+			vec![CreateComponent::Section(CreateSection::new(
+				[CreateSectionComponent::TextDisplay(
+					CreateTextDisplay::new(format!(
+						"## [",
+						escape_markdown(&most_common_song_name),
+						"](",
+						page_url,
+						")\n### by ",
+						escape_markdown(&most_common_artist_name),
+					)),
+				)]
+				.to_vec()
+				.to_owned(),
+				CreateSectionAccessory::Thumbnail(CreateThumbnail::new(
+					CreateUnfurledMediaItem::new(
+						"attachment://thumbnail.png",
 					),
-				));
-			} else if let Some(error) = error {
-				reply = reply.content_or_attachment(|is_content| {
-					if is_content {
-						format!("```\n", error:#, "\n```")
-					} else {
-						format!(error:#)
-					}
+				)),
+			))];
+		components.append(
+			&mut platforms
+				.iter()
+				.map(|platform| {
+					CreateButton::new_link(platform.url.clone())
+						.label(platform.platform_name.clone())
 				})
-			}
-		}
-	}
+				.collect::<Vec<_>>()
+				// 5 is the limit of buttons per row.
+				.chunks(5)
+				.map(|buttons| {
+					CreateComponent::ActionRow(CreateActionRow::Buttons(
+						buttons.to_vec().into(),
+					))
+				})
+				.collect::<Vec<_>>(),
+		);
+		components.push(CreateComponent::ActionRow(
+			CreateActionRow::Buttons(
+				[CreateButton::new("audio")
+					.label("Send Audio")
+					.disabled(disabled)]
+				.to_vec()
+				.into(),
+			),
+		));
+		components
+	};
+	reply = reply.components(
+		[CreateComponent::Container(
+			CreateContainer::new(make_components(false))
+				.accent_color(accent_color.clone()),
+		)]
+		.to_vec()
+		.to_owned(),
+	);
 
-	Ok(reply)
+	let disabled_reply = reply.clone().components(
+		[CreateComponent::Container(
+			CreateContainer::new(make_components(true))
+				.accent_color(accent_color),
+		)]
+		.to_vec()
+		.to_owned(),
+	);
+
+	Ok((reply, disabled_reply))
 }
 
 /// Uses Firefox to search https://odesli.co/.
@@ -378,13 +411,11 @@ struct SongInfoModal {
 	#[name = "URL Index"]
 	#[placeholder = "The index of the URL to use. (default: 0)"]
 	url_index: Option<String>,
-	#[placeholder = "Whether or not to download the song. (default: true)"]
-	download: Option<String>,
 	#[placeholder = "Whether or not to show the message."]
 	ephemeral: Option<String>,
 }
 
-/// Shows song information from a given link.
+// Shows song information from a given link.
 #[poise::command(
 	context_menu_command = "Song Info",
 	owners_only,
@@ -405,12 +436,6 @@ pub async fn song_info_context_menu(
 		Some("false") => false,
 		Some(_) => true,
 		None => false,
-	};
-
-	let download = match data.download.as_deref() {
-		Some("false") => false,
-		Some(_) => true,
-		None => true,
 	};
 
 	let urls = LINK_REGEX
@@ -434,22 +459,30 @@ pub async fn song_info_context_menu(
 		.clone()
 		.map_err(|_| anyhow!("Somehow the selected URL is invalid."))?;
 
-	ctx.send(
-		build_song_info_message(
-			&Context::Application(ctx),
-			url,
-			None,
-			None,
-			if download {
-				Some(YouTubeDownloader::builder().build())
-			} else {
-				None
-			},
-			ephemeral,
-		)
-		.await?,
+	let mut youtube_downloader = YouTubeDownloader::builder().build();
+
+	let (reply, disabled_reply) = build_song_info_message(
+		&Context::Application(ctx),
+		url,
+		None,
+		None,
+		&mut youtube_downloader,
+		ephemeral,
 	)
 	.await?;
+
+	let message = ctx.send(reply).await?;
+	song_interactions(
+		&Context::Application(ctx),
+		&message,
+		&disabled_reply,
+		youtube_downloader,
+	)
+	.await?;
+	message
+		.edit(poise::Context::Application(ctx), disabled_reply)
+		.await?;
+
 	Ok(())
 }
 
@@ -467,8 +500,6 @@ pub async fn song_info(
 	#[description = "The link to the song to look up."] url: Option<Url>,
 	#[description = "The search query to look up the song with."]
 	query: Option<String>,
-	#[description = "Whether or not to download the song. (default: true)"]
-	download: Option<bool>,
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
@@ -480,40 +511,30 @@ pub async fn song_info(
 		ctx.defer().await?;
 	}
 
-	let youtube_downloader = if download.is_none_or(|d| !d) {
-		Some(YouTubeDownloader::builder().build())
-	} else {
-		None
-	};
+	let mut youtube_downloader = YouTubeDownloader::builder().build();
 
-	match (url, query) {
+	let (reply, disabled_reply) = match (url, query) {
 		(Some(url), None) => {
-			ctx.send(
-				build_song_info_message(
-					&ctx,
-					url,
-					None,
-					None,
-					youtube_downloader,
-					ephemeral,
-				)
-				.await?,
+			build_song_info_message(
+				&ctx,
+				url,
+				None,
+				None,
+				&mut youtube_downloader,
+				ephemeral,
 			)
-			.await?;
+			.await?
 		}
 		(None, Some(query)) => {
-			ctx.send(
-				build_song_info_message(
-					&ctx,
-					get_song_link_searchable_link(query).await?,
-					None,
-					None,
-					youtube_downloader,
-					ephemeral,
-				)
-				.await?,
+			build_song_info_message(
+				&ctx,
+				get_song_link_searchable_link(query).await?,
+				None,
+				None,
+				&mut youtube_downloader,
+				ephemeral,
 			)
-			.await?;
+			.await?
 		}
 		(None, None) => {
 			return Err(anyhow!("No URL or query provided."));
@@ -521,6 +542,63 @@ pub async fn song_info(
 		(Some(_), Some(_)) => {
 			return Err(anyhow!("Only provide a URL or a query, not both."));
 		}
-	}
+	};
+
+	let message = ctx.send(reply).await?;
+	song_interactions(&ctx, &message, &disabled_reply, youtube_downloader)
+		.await?;
+	message.edit(ctx, disabled_reply).await?;
+
+	Ok(())
+}
+
+pub async fn song_interactions<'a>(
+	ctx: &Context<'a>,
+	message: &ReplyHandle<'a>,
+	disabled_reply: &CreateReply<'a>,
+	mut youtube_downloader: YouTubeDownloader,
+) -> Result<()> {
+	while match ComponentInteractionCollector::new(&ctx.serenity_context())
+		.message_id(message.message().await?.id)
+		.timeout(Duration::from_secs(60 * 5))
+		.await
+	{
+		Some(ref interaction) => {
+			interaction
+				.create_response(
+					ctx.http(),
+					CreateInteractionResponse::Defer(
+						CreateInteractionResponseMessage::new(),
+					),
+				)
+				.await?;
+
+			message.edit(ctx.clone(), disabled_reply.clone()).await?;
+
+			let mut audio = CreateInteractionResponseFollowup::new();
+			if youtube_downloader.was_started() {
+				let file_name = youtube_downloader.get_file_name();
+				let error = youtube_downloader.get_error();
+				if let Ok(file_bytes) = youtube_downloader.wait().await {
+					audio = audio.add_file(CreateAttachment::bytes(
+						file_bytes, file_name,
+					));
+				} else if let Some(error) = error {
+					audio = audio.content_or_attachment(|is_content| {
+						if is_content {
+							format!("```\n", error:#, "\n```")
+						} else {
+							format!(error:#)
+						}
+					})
+				}
+			};
+			interaction.create_followup(ctx.http(), audio).await?;
+
+			false
+		}
+		None => false,
+	} {}
+
 	Ok(())
 }

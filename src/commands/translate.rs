@@ -4,14 +4,15 @@ use url::Url;
 
 use crate::{
 	config::{ApplicationContext, Context},
-	helpers::{wait_for_element, CreateReplyExt},
+	helpers::{wait_for_element, ContentOrAttachmentExt},
 };
 use anyhow::{anyhow, Result};
 use fancy_regex::Regex;
 use inline_format::{format, println};
 use poise::{
 	serenity_prelude::{
-		CreateActionRow, CreateAllowedMentions, CreateButton, Message,
+		CreateActionRow, CreateAllowedMentions, CreateButton,
+		CreateComponent, Message,
 	},
 	CreateReply, Modal,
 };
@@ -158,7 +159,7 @@ pub async fn translate_context_menu(
 		.ephemeral(ephemeral);
 
 	let translation_result = translate_text(
-		&message.content,
+		&message.content.to_string(),
 		&data.source_language.unwrap_or("auto".to_string()),
 		&data
 			.target_language
@@ -166,9 +167,16 @@ pub async fn translate_context_menu(
 	)
 	.await?;
 
-	reply = reply.components(vec![CreateActionRow::Buttons(vec![
-		CreateButton::new_link(translation_result.url).label("View Online"),
-	])]);
+	reply = reply.components(
+		[CreateComponent::ActionRow(CreateActionRow::Buttons(
+			[CreateButton::new_link(translation_result.url.to_string())
+				.label("View Online")]
+			.to_vec()
+			.into(),
+		))]
+		.to_vec()
+		.to_owned(),
+	);
 	reply = reply.content_or_attachment(|_| {
 		translation_result.translated_text.to_string()
 	});
@@ -217,9 +225,16 @@ pub async fn translate(
 	)
 	.await?;
 
-	reply = reply.components(vec![CreateActionRow::Buttons(vec![
-		CreateButton::new_link(translation_result.url).label("View Online"),
-	])]);
+	reply = reply.components(
+		[CreateComponent::ActionRow(CreateActionRow::Buttons(
+			[CreateButton::new_link(translation_result.url.to_string())
+				.label("View Online")]
+			.to_vec()
+			.into(),
+		))]
+		.to_vec()
+		.to_owned(),
+	);
 	reply = reply.content_or_attachment(|_| {
 		translation_result.translated_text.to_string()
 	});

@@ -22,6 +22,7 @@ pub struct YouTubeDownloader {
 	file_bytes: Option<Vec<u8>>,
 	downloading_future: Option<DownloadFuture>,
 	error: Option<Arc<Error>>,
+	file_name: String,
 }
 
 #[bon]
@@ -54,6 +55,7 @@ impl YouTubeDownloader {
 			file_bytes: None,
 			downloading_future: None,
 			error: None,
+			file_name: "unknown.mp3".to_string(),
 		}
 	}
 	pub fn get_url(&self) -> Option<Url> {
@@ -61,6 +63,12 @@ impl YouTubeDownloader {
 	}
 	pub fn get_error(&self) -> Option<Arc<Error>> {
 		self.error.clone()
+	}
+	pub fn get_file_name(&self) -> String {
+		self.file_name.clone()
+	}
+	pub fn file_name(&mut self, file_name: impl ToString) {
+		self.file_name = file_name.to_string();
 	}
 
 	/// Starts downloading the YouTube video from the given URL using yt-dlp asynchronously.
@@ -122,7 +130,7 @@ impl YouTubeDownloader {
 	}
 
 	/// Waits for the download to complete.
-	pub async fn wait(mut self) -> Result<Vec<u8>> {
+	pub async fn wait(&mut self) -> Result<Vec<u8>> {
 		if self.is_done() {
 			return self.file_bytes();
 		}
@@ -144,8 +152,9 @@ impl YouTubeDownloader {
 		self.file_bytes()
 	}
 
-	pub fn file_bytes(self) -> Result<Vec<u8>> {
+	pub fn file_bytes(&self) -> Result<Vec<u8>> {
 		self.file_bytes
+			.clone()
 			.ok_or_else(|| anyhow!("Failed to download file."))
 	}
 

@@ -1,12 +1,15 @@
 #[global_allocator]
 static ALLOC: MiMalloc = MiMalloc;
 
+use std::sync::Arc;
+
 use config::{BotData, Config};
 use inline_format::eprintln;
 use mimalloc::MiMalloc;
 use poise::serenity_prelude as serenity;
 
 pub mod commands;
+// pub mod component_count;
 pub mod config;
 pub mod helpers;
 pub mod media;
@@ -23,7 +26,7 @@ async fn main() {
 		commands::github(),
 		commands::fix(),
 		commands::uptime(),
-		commands::help(),
+		// commands::help(),
 		commands::snowstamp(),
 		commands::wolfram(),
 		commands::wayback(),
@@ -37,7 +40,7 @@ async fn main() {
 		commands::jxl(),
 		commands::ffmpeg(),
 		commands::translate(),
-		commands::embed(),
+		// commands::embed(),
 		commands::screenshot(),
 		commands::flip(),
 		commands::now_playing(),
@@ -58,7 +61,7 @@ async fn main() {
 				commands.push(commands::favoritize_context_menu());
 			}
 			"translate" => {
-				commands.push(commands::translate_context_menu());
+				// commands.push(commands::translate_context_menu());
 			}
 			"webp" => {
 				commands.push(commands::webp_context_menu());
@@ -80,21 +83,22 @@ async fn main() {
 
 	let framework = poise::Framework::builder()
 		.options(options)
-		.setup(|ctx, _ready, framework| {
-			Box::pin(async move {
-				poise::builtins::register_globally(
-					ctx,
-					&framework.options().commands,
-				)
-				.await?;
-				Ok(BotData::new())
-			})
-		})
+		// .setup(|ctx, _ready, framework| {
+		// 	Box::pin(async move {
+		// 		poise::builtins::register_globally(
+		// 			ctx,
+		// 			&framework.options().commands,
+		// 		)
+		// 		.await?;
+		// 		Ok(BotData::new())
+		// 	})
+		// })
 		.build();
 
 	let client =
 		serenity::ClientBuilder::new(config.discord_token.clone(), intents)
 			.framework(framework)
+			.data(Arc::new(BotData::new()))
 			.await;
 	client.unwrap().start().await.unwrap();
 }

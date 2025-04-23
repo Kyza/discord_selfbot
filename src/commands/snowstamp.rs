@@ -1,12 +1,16 @@
 use anyhow::{anyhow, Result};
 use chrono::{Datelike, Timelike};
+use inline_format::format;
 use poise::{
 	serenity_prelude::{
 		self as serenity, async_trait, CreateAllowedMentions,
+		CreateComponent, CreateContainer, CreateTextDisplay, MessageFlags,
 	},
 	ChoiceParameter, CreateReply, SlashArgError, SlashArgument,
 };
 use serde::{Deserialize, Serialize};
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 use crate::config::{Config, Context};
 
@@ -44,21 +48,30 @@ impl Month {
 	}
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(
+	Debug, Serialize, Deserialize, Clone, EnumIter, strum_macros::Display,
+)]
 pub enum TimestampFormat {
 	#[serde(rename = "t")]
+	#[strum(serialize = "Short Time")]
 	ShortTime,
 	#[serde(rename = "T")]
+	#[strum(serialize = "Long Time")]
 	LongTime,
 	#[serde(rename = "d")]
+	#[strum(serialize = "Short Date")]
 	ShortDate,
 	#[serde(rename = "D")]
+	#[strum(serialize = "Long Date")]
 	LongDate,
 	#[serde(rename = "f")]
+	#[strum(serialize = "Short Date Time")]
 	ShortDateTime,
 	#[serde(rename = "F")]
+	#[strum(serialize = "Long Date Time")]
 	LongDateTime,
 	#[serde(rename = "R")]
+	#[strum(serialize = "Relative Time")]
 	RelativeTime,
 }
 #[async_trait]
@@ -219,24 +232,21 @@ pub async fn snowstamp(
 	#[description = "The hour in the time."] hour: Option<u32>,
 	#[description = "The minute in the time."] minute: Option<u32>,
 	#[description = "The second in the time."] second: Option<u32>,
-	#[description = "Timestamp format."] format: Option<TimestampFormat>,
+	// #[description = "Timestamp format."] format: Option<TimestampFormat>,
 	#[description = "Whether or not to show the message."] ephemeral: Option<
 		bool,
 	>,
 ) -> Result<()> {
-	let ephemeral = ephemeral.unwrap_or(false);
+	let ephemeral = ephemeral.unwrap_or(true);
 	if ephemeral {
 		ctx.defer_ephemeral().await?;
 	} else {
 		ctx.defer().await?;
 	}
 
-	let format_letter = serde_plain::to_string::<TimestampFormat>(
-		&format.unwrap_or(TimestampFormat::ShortDateTime),
-	)?;
-
 	let mut reply = CreateReply::default()
 		.allowed_mentions(CreateAllowedMentions::default())
+		.flags(MessageFlags::IS_COMPONENTS_V2)
 		.ephemeral(ephemeral);
 
 	let id_or_time = match (id, year, month, day, hour, minute, second) {
@@ -259,36 +269,48 @@ pub async fn snowstamp(
 		_ => IdOrTime::None,
 	};
 
-	match id_or_time {
-		IdOrTime::Id(id) => {
-			let response = format!(
-				"<t:{}:{}>",
-				serenity::UserId::new(id.parse::<u64>()?)
-					.created_at()
-					.timestamp(),
-				format_letter
-			);
+	let mut timestamps = Vec::new();
 
-			reply = reply.content(response);
-
-			ctx.send(reply).await?;
-			Ok(())
-		}
-		IdOrTime::Time(time) => {
-			let response = format!("<t:{}:{}>", time, format_letter);
-
-			reply = reply.content(response);
-
-			ctx.send(reply).await?;
-			Ok(())
-		}
+	let time = match id_or_time {
+		IdOrTime::Id(id) => serenity::UserId::new(id.parse::<u64>()?)
+			.created_at()
+			.timestamp(),
+		IdOrTime::Time(time) => time,
 		IdOrTime::None => {
 			let reply = CreateReply::default()
 				.allowed_mentions(CreateAllowedMentions::default())
 				.content("You must specify either a Discord snowflake ID or any combination of time values.")
 				.ephemeral(true);
 			ctx.send(reply).await?;
-			Ok(())
+			return Ok(());
 		}
+	};
+
+	for format in TimestampFormat::iter() {
+		let format_letter =
+			serde_plain::to_string::<TimestampFormat>(&format)?;
+		let timestamp_string = format!("<t:", time, ":", format_letter, ">");
+		timestamps.push(CreateComponent::TextDisplay(
+			CreateTextDisplay::new(format!(
+				"## ",
+				format,
+				"\n",
+				timestamp_string,
+				"\n```\n",
+				timestamp_string,
+				"\n```"
+			)),
+		));
 	}
+
+	let container = CreateComponent::Container(
+		CreateContainer::new(timestamps)
+			.accent_color(ctx.data().config.embed_color.clone()),
+	);
+
+	reply = reply.components(vec![container].to_owned());
+
+	ctx.send(reply).await?;
+
+	Ok(())
 }

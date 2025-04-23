@@ -7,7 +7,10 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use poise::{
-	serenity_prelude::{Attachment, CreateAttachment, EmbedThumbnail},
+	serenity_prelude::{
+		Attachment, Colour, CreateAttachment,
+		CreateInteractionResponseFollowup, EmbedThumbnail,
+	},
 	CreateReply,
 };
 use reqwest::header;
@@ -25,12 +28,14 @@ macro_rules! crunch {
 pub use crunch;
 use thirtyfour::{prelude::ElementQueryable, By, WebDriver, WebElement};
 
-pub trait CreateReplyExt {
+use crate::config::{Color, Context};
+
+pub trait ContentOrAttachmentExt {
 	fn content_or_attachment<F>(&self, cb: F) -> Self
 	where
 		F: Fn(bool) -> String;
 }
-impl CreateReplyExt for CreateReply {
+impl<'a> ContentOrAttachmentExt for CreateReply<'a> {
 	fn content_or_attachment<F>(&self, cb: F) -> Self
 	where
 		F: Fn(bool) -> String,
@@ -39,9 +44,28 @@ impl CreateReplyExt for CreateReply {
 		if content_text.len() <= 2000 {
 			self.clone().content(content_text)
 		} else {
-			let attachment_text = cb(false);
+			let attachment_text = cb(false).clone();
+			let attachment_text = attachment_text.as_bytes().to_owned();
 			self.clone().attachment(CreateAttachment::bytes(
-				attachment_text.as_bytes(),
+				attachment_text,
+				"text.txt",
+			))
+		}
+	}
+}
+impl<'a> ContentOrAttachmentExt for CreateInteractionResponseFollowup<'a> {
+	fn content_or_attachment<F>(&self, cb: F) -> Self
+	where
+		F: Fn(bool) -> String,
+	{
+		let content_text = cb(true);
+		if content_text.len() <= 2000 {
+			self.clone().content(content_text)
+		} else {
+			let attachment_text = cb(false).clone();
+			let attachment_text = attachment_text.as_bytes().to_owned();
+			self.clone().add_file(CreateAttachment::bytes(
+				attachment_text,
 				"text.txt",
 			))
 		}
@@ -103,7 +127,7 @@ impl AttachmentOrThumbnail {
 				let url = e.proxy_url.as_ref().ok_or_else(|| {
 					anyhow!("Embed thumbnail has no proxy URL")
 				})?;
-				let request = client.get(url).send().await?;
+				let request = client.get(url.to_string()).send().await?;
 				Ok(request.bytes().await?.to_vec())
 			}
 		}
@@ -111,7 +135,7 @@ impl AttachmentOrThumbnail {
 
 	pub fn filename(&self) -> String {
 		match self {
-			AttachmentOrThumbnail::Attachment(a) => a.filename.clone(),
+			AttachmentOrThumbnail::Attachment(a) => a.filename.to_string(),
 			AttachmentOrThumbnail::Embed(e) => {
 				// Parse the URL to get the filename.
 				let url = &e.proxy_url;
@@ -183,4 +207,41 @@ pub fn escape_markdown(text: &str) -> String {
 		}
 	}
 	escaped
+}
+
+pub fn colour_from_image(
+	ctx: &Context,
+	image_bytes: &Vec<u8>,
+) -> Result<Colour> {
+	use color_thief::{get_palette, ColorFormat};
+
+	let color_bytes = image::load_from_memory(&image_bytes)
+		.unwrap()
+		.to_rgb8()
+		.into_raw();
+
+	Ok(get_palette(&color_bytes[..], ColorFormat::Rgb, 10, 2)?
+		.first()
+		// u8 u8 u8 to u32
+		.map(|color| {
+			Color(
+				color.r as u32
+					| (color.g as u32) << 8
+					| (color.b as u32) << 16,
+			)
+		})
+		.unwrap_or(ctx.data().config.embed_color.clone())
+		.into())
+}
+
+/// Ensures the width or the height is at least `min_width_or_height` and scales the other.
+pub fn scale_to_min(
+	width: u32,
+	height: u32,
+	min_width_or_height: u32,
+) -> (u32, u32, f32) {
+	let scale = min_width_or_height as f32 / width.max(height) as f32;
+	let new_width = (width as f32 * scale) as u32;
+	let new_height = (height as f32 * scale) as u32;
+	(new_width, new_height, scale)
 }

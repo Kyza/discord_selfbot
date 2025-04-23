@@ -35,7 +35,7 @@ pub async fn age(
 	let response = format!(
 		"{} was created at <t:{}:F>.",
 		u.id.mention(),
-		u.created_at().timestamp()
+		u.id.created_at().timestamp()
 	);
 
 	let reply = CreateReply::default()
