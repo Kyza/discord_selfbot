@@ -308,15 +308,17 @@ pub async fn build_song_info_message<'a>(
 				})
 				.collect::<Vec<_>>(),
 		);
-		components.push(CreateComponent::ActionRow(
-			CreateActionRow::Buttons(
-				[CreateButton::new("audio")
-					.label("Send Audio")
-					.disabled(disabled)]
-				.to_vec()
-				.into(),
-			),
-		));
+		if youtube_downloader.was_started() {
+			components.push(CreateComponent::ActionRow(
+				CreateActionRow::Buttons(
+					[CreateButton::new("audio")
+						.label("Send Audio")
+						.disabled(disabled)]
+					.to_vec()
+					.into(),
+				),
+			));
+		}
 		components
 	};
 	reply = reply.components(
