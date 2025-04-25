@@ -43,6 +43,11 @@ As long as you don't change any files you can use `update_restart.cmd` to pull t
    - [x] Context menu supported.
 - [ ] `/cobalt` - Downloads media from a URL using the Cobalt API and sends it.
    - Disabled until Cobalt gets an official API.
+- [x] `/deepl` - DeepL API command group.
+   - [x] `/deepl translate text` - Translates text using the DeepL API.
+      - [x] Context menu supported.
+   - [x] `/deepl translate document` - Translates a document using the DeepL API.
+   - [x] `/deepl usage` - Shows the DeepL API usage.
 - [x] `/help` - Shows the help menu.
 - [ ] `/embed` - Creates and sends an embed from either fields or multiple from a RON representation.
    - https://github.com/ron-rs/ron
@@ -69,14 +74,6 @@ As long as you don't change any files you can use `update_restart.cmd` to pull t
    - [x] Context menu supported.
    - [x] YouTube song downloading supported.
 - [x] `/source` - Sends the link to the bot's source code.
-- [x] `/translate` - Translates text using DeepL.
-   - [x] Context menu supported.
-   - DeepL's API signup has been broken for me for the past few months, so this uses `thirtyfour` and `geckodriver`.
-      - It can only handle one translation at a time.
-      - Firefox currently has a bug where it has to be run with `sudo` to work.
-      - I have some code that will run a new `geckodriver` instance for each translation, but it's not working yet because of that and more.
-      - https://github.com/SeleniumHQ/selenium/issues/12862
-      - https://github.com/mozilla/geckodriver/issues/2082
 - [x] `/unicode` - Converts text to and from Unicode.
 - [x] `/uptime` - Tells you how long the bot has been up for.
 - [x] `/wayback` - Generates an archive.org (Wayback Machine) URL for a given URL.

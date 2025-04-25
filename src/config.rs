@@ -1,9 +1,16 @@
-use anyhow::Error;
 use chrono::{DateTime, Local};
 use chrono_tz::Tz;
-use poise::serenity_prelude::{self as serenity, Colour, Token};
+use deepl::Lang;
+use num_format::Locale;
+use poise::serenity_prelude::{self as serenity, Colour};
+use secrecy::SecretString;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, fs};
+use std::{
+	collections::HashSet,
+	fs,
+	ops::{Deref, DerefMut},
+	str::FromStr,
+};
 
 #[derive(Debug, Clone)]
 pub struct TimeZoneMiddleman(Tz);
@@ -29,6 +36,41 @@ impl<'de> Deserialize<'de> for TimeZoneMiddleman {
 		s.parse::<Tz>()
 			.map(TimeZoneMiddleman)
 			.map_err(serde::de::Error::custom)
+	}
+}
+
+#[derive(Debug, Clone)]
+pub struct LocaleMiddleman(Locale);
+impl Serialize for LocaleMiddleman {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		serializer.serialize_str(&self.0.name())
+	}
+}
+impl<'de> Deserialize<'de> for LocaleMiddleman {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: serde::Deserializer<'de>,
+	{
+		let s = String::deserialize(deserializer)?;
+		let string = s.parse::<String>().unwrap();
+		Locale::from_str(&string)
+			.map(LocaleMiddleman)
+			.map_err(serde::de::Error::custom)
+	}
+}
+impl Deref for LocaleMiddleman {
+	type Target = Locale;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
+impl DerefMut for LocaleMiddleman {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
 	}
 }
 
@@ -66,18 +108,18 @@ impl BotData {
 	}
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Config {
-	pub discord_token: Token,
+	pub discord_token: SecretString,
 	pub owner_ids: HashSet<serenity::UserId>,
-	pub application_id: serenity::UserId,
-	pub wolfram_alpha_full_app_id: Option<String>,
-	// pub wolfram_alpha_simple_app_id: Option<String>,
-	// pub wolfram_alpha_short_app_id: Option<String>,
-	pub deepl_target_language: String,
+	pub application_id: serenity::ApplicationId,
+	pub wolfram_alpha_full_app_id: Option<SecretString>,
+	pub deepl_api_key: Option<SecretString>,
+	pub deepl_default_target_language: Option<Lang>,
 	pub timezone: TimeZoneMiddleman,
+	pub locale: LocaleMiddleman,
 	pub embed_color: Color,
-	pub randomorg_api_key: Option<String>,
+	pub randomorg_api_key: Option<SecretString>,
 	pub listenbrainz_user: Option<String>,
 	pub context_menu_commands: Vec<String>,
 }
@@ -93,6 +135,7 @@ impl Config {
 	}
 }
 
+pub type Error = anyhow::Error;
 pub type Context<'a> = poise::Context<'a, BotData, Error>;
 pub type ApplicationContext<'a> =
 	poise::ApplicationContext<'a, BotData, Error>;

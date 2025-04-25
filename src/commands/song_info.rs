@@ -16,8 +16,8 @@ use poise::{
 		CreateComponent, CreateContainer, CreateInteractionResponse,
 		CreateInteractionResponseFollowup, CreateInteractionResponseMessage,
 		CreateSection, CreateSectionAccessory, CreateSectionComponent,
-		CreateTextDisplay, CreateThumbnail, CreateUnfurledMediaItem, Message,
-		MessageFlags,
+		CreateSeparator, CreateTextDisplay, CreateThumbnail,
+		CreateUnfurledMediaItem, Message, MessageFlags,
 	},
 	CreateReply, Modal, ReplyHandle,
 };
@@ -271,8 +271,8 @@ pub async fn build_song_info_message<'a>(
 		}
 	};
 	let make_components = |disabled| {
-		let mut components =
-			vec![CreateComponent::Section(CreateSection::new(
+		let mut components = vec![
+			CreateComponent::Section(CreateSection::new(
 				[CreateSectionComponent::TextDisplay(
 					CreateTextDisplay::new(format!(
 						"## [",
@@ -290,7 +290,9 @@ pub async fn build_song_info_message<'a>(
 						"attachment://thumbnail.png",
 					),
 				)),
-			))];
+			)),
+			CreateComponent::Separator(CreateSeparator::new(true)),
+		];
 		components.append(
 			&mut platforms
 				.iter()

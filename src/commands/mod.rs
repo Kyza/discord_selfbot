@@ -18,7 +18,7 @@ crunch![
 	bible,
 	favoritize,
 	ffmpeg,
-	translate,
+	deepl,
 	// help,
 	webp,
 	jxl,
@@ -28,4 +28,5 @@ crunch![
 	now_playing,
 	song_info,
 	source,
+	command_buttons,
 ];

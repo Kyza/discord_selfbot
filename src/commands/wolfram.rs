@@ -15,6 +15,7 @@ use poise::{
 	},
 	CreateReply,
 };
+use secrecy::ExposeSecret;
 
 const ACCENT_COLOR: u32 = 0xff6600;
 
@@ -288,7 +289,7 @@ pub async fn wolfram(
 		query,
 		generate_timeouts(Duration::from_secs(60)),
 		"&format=plaintext,image&output=json&async=false&units=metric&appid=",
-		wolfram_alpha_full_app_id
+		wolfram_alpha_full_app_id.expose_secret()
 	);
 
 	let full_response =

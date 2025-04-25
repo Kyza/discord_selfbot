@@ -1,5 +1,6 @@
 use anyhow::Result;
 use poise::{serenity_prelude::CreateAllowedMentions, CreateReply};
+use secrecy::ExposeSecret;
 
 use crate::config::Context;
 
@@ -40,7 +41,7 @@ pub async fn flip(
 			"jsonrpc": "2.0",
 			"method": "generateIntegers",
 			"params": {
-				"apiKey": api_key,
+				"apiKey": api_key.expose_secret(),
 				"n": 1,
 				"min": 1,
 				"max": 12000,

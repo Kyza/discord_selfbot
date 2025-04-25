@@ -4,14 +4,18 @@ Config(
 	owner_ids: [
 		UserId(220584715265114113),
 	],
-	application_id: UserId(),
+	application_id: ApplicationId(0),
 	// https://developer.wolframalpha.com/
 	// Set to None to disable Wolfram Alpha.
 	wolfram_alpha_full_app_id: Some(""),
-	// The language name as it appears in the DeepL website.
-	deepl_target_language: "",
+	// https://www.deepl.com/en/your-account/keys
+	deepl_api_key: Some(""),
+	// https://github.com/Kyza/deepl-rs/blob/4ecedf50f96d5031816e61dd3fdd2bd25f18486e/src/lang.rs#L97-L134
+	deepl_default_target_language: Some("en-us"),
 	// https://wikipedia.org/wiki/List_of_tz_database_time_zones
 	timezone: "",
+	// https://docs.rs/num-format/latest/num_format/enum.Locale.html
+	locale: "en",
 	// The default color of embeds from `/embed`.
 	embed_color: Color(0x000000),
 	// https://api.random.org/dashboard

@@ -1,12 +1,20 @@
 #[global_allocator]
 static ALLOC: MiMalloc = MiMalloc;
 
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
-use config::{BotData, Config};
-use inline_format::eprintln;
+use anyhow::Result;
+use config::{BotData, Config, Error};
+use inline_format::{eprintln, println};
 use mimalloc::MiMalloc;
-use poise::serenity_prelude as serenity;
+use poise::{
+	samples::create_application_commands,
+	serenity_prelude::{
+		self as serenity, ActivityData, ClientBuilder, OnlineStatus, Token,
+	},
+	Command, FrameworkOptions,
+};
+use secrecy::ExposeSecret;
 
 pub mod commands;
 // pub mod component_count;
@@ -16,12 +24,8 @@ pub mod media;
 pub mod os_command;
 pub mod youtube_downloader;
 
-#[tokio::main]
-async fn main() {
-	let config = Config::new();
-	let intents = serenity::GatewayIntents::non_privileged();
-
-	let mut commands = vec![
+pub fn get_commands() -> Vec<Command<BotData, Error>> {
+	vec![
 		commands::age(),
 		commands::github(),
 		commands::fix(),
@@ -39,66 +43,82 @@ async fn main() {
 		commands::webp(),
 		commands::jxl(),
 		commands::ffmpeg(),
-		commands::translate(),
+		commands::deepl(),
+		// commands::deepl_translate(),
+		// commands::deepl_usage(),
 		// commands::embed(),
 		commands::screenshot(),
 		commands::flip(),
 		commands::now_playing(),
 		commands::song_info(),
 		commands::source(),
-	];
+		commands::command_buttons(),
+	]
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+	tracing_subscriber::fmt::init();
+
+	let config = Config::new();
+	println!(config:#?);
+	let intents = serenity::GatewayIntents::non_privileged();
+
+	let commands = get_commands();
 
 	// Add the context menu commands if they're in the config.
-	for command_name in &config.context_menu_commands {
-		match command_name.as_str() {
-			"bible" => {
-				commands.push(commands::bible_context_menu());
-			}
-			"song_info" => {
-				commands.push(commands::song_info_context_menu());
-			}
-			"favoritize" => {
-				commands.push(commands::favoritize_context_menu());
-			}
-			"translate" => {
-				// commands.push(commands::translate_context_menu());
-			}
-			"webp" => {
-				commands.push(commands::webp_context_menu());
-			}
-			"jxl" => {
-				commands.push(commands::jxl_context_menu());
-			}
-			name => {
-				eprintln!("Warning! Command \"", name, "\" doesn't exist.");
-			}
-		}
-	}
+	// for command_name in &config.context_menu_commands {
+	// 	match command_name.as_str() {
+	// 		"bible" => {
+	// 			commands.push(commands::bible_context_menu());
+	// 		}
+	// 		"song_info" => {
+	// 			commands.push(commands::song_info_context_menu());
+	// 		}
+	// 		"favoritize" => {
+	// 			commands.push(commands::favoritize_context_menu());
+	// 		}
+	// 		"translate" => {
+	// 			// commands.push(commands::translate_context_menu());
+	// 		}
+	// 		"webp" => {
+	// 			commands.push(commands::webp_context_menu());
+	// 		}
+	// 		"jxl" => {
+	// 			commands.push(commands::jxl_context_menu());
+	// 		}
+	// 		name => {
+	// 			eprintln!("Warning! Command \"", name, "\" doesn't exist.");
+	// 		}
+	// 	}
+	// }
 
-	let options = poise::FrameworkOptions {
+	let options: FrameworkOptions<BotData, Error> = poise::FrameworkOptions {
 		owners: config.owner_ids.clone(),
 		commands,
 		..Default::default()
 	};
 
-	let framework = poise::Framework::builder()
-		.options(options)
-		// .setup(|ctx, _ready, framework| {
-		// 	Box::pin(async move {
-		// 		poise::builtins::register_globally(
-		// 			ctx,
-		// 			&framework.options().commands,
-		// 		)
-		// 		.await?;
-		// 		Ok(BotData::new())
-		// 	})
-		// })
-		.build();
+	let framework = poise::Framework::builder().options(options).build();
 
-	let client =
-		serenity::ClientBuilder::new(config.discord_token.clone(), intents)
-			.framework(framework)
-			.data(Arc::new(BotData::new()))
-			.await;
-	client.unwrap().start().await.unwrap();
+	let mut client = ClientBuilder::new(
+		Token::from_str(config.discord_token.expose_secret())
+			.expect("Invalid Discord token"),
+		intents,
+	)
+	.activity(ActivityData::competing("Discord against Kyza."))
+	.status(OnlineStatus::DoNotDisturb)
+	.framework(framework)
+	.data(Arc::new(BotData::new()))
+	.await?;
+
+	client.http.set_application_id(config.application_id);
+
+	let commands =
+		create_application_commands::<BotData, Error>(&get_commands());
+	if let Err(err) = client.http.create_global_commands(&commands).await {
+		eprintln!("Error creating global commands: ", err);
+	}
+
+	client.start_autosharded().await.map_err(|e| e.into())
 }
