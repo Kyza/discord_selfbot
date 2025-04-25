@@ -179,21 +179,16 @@ pub async fn create_translation_reply<'a>(
 			&target_language,
 			&source_language,
 		);
-		let mut components = [
-			CreateComponent::TextDisplay(CreateTextDisplay::new(format!(
-				"## From ",
+		let mut components = [CreateComponent::TextDisplay(
+			CreateTextDisplay::new(format!(
+				"## From __",
 				source_language.description(),
-				"\n",
-				text,
-			))),
-			CreateComponent::Separator(CreateSeparator::new(true)),
-			CreateComponent::TextDisplay(CreateTextDisplay::new(format!(
-				"## To ",
+				"__ To __",
 				target_language.description(),
-				"\n",
+				"__\n",
 				translation_result
-			))),
-		]
+			)),
+		)]
 		.to_vec()
 		.to_owned();
 		// The max length of a link in a button in Discord is 512 characters.
@@ -556,7 +551,7 @@ pub fn make_document_translation_reply<'a>(
 							[
 								CreateComponent::TextDisplay(
 									CreateTextDisplay::new(format!(
-										"## __",
+										"## From __",
 										match source_language {
 											Some(lang) => {
 												lang.description()

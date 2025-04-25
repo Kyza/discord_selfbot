@@ -24,8 +24,8 @@ pub mod media;
 pub mod os_command;
 pub mod youtube_downloader;
 
-pub fn get_commands() -> Vec<Command<BotData, Error>> {
-	vec![
+pub fn get_commands<'a>(config: &Config) -> Vec<Command<BotData, Error>> {
+	let mut commands = vec![
 		commands::age(),
 		commands::github(),
 		commands::fix(),
@@ -44,8 +44,6 @@ pub fn get_commands() -> Vec<Command<BotData, Error>> {
 		commands::jxl(),
 		commands::ffmpeg(),
 		commands::deepl(),
-		// commands::deepl_translate(),
-		// commands::deepl_usage(),
 		// commands::embed(),
 		commands::screenshot(),
 		commands::flip(),
@@ -53,7 +51,36 @@ pub fn get_commands() -> Vec<Command<BotData, Error>> {
 		commands::song_info(),
 		commands::source(),
 		commands::command_buttons(),
-	]
+	];
+
+	// Add the context menu commands if they're in the config.
+	for command_name in &config.context_menu_commands {
+		match command_name.as_str() {
+			"bible" => {
+				commands.push(commands::bible_context_menu());
+			}
+			"song_info" => {
+				commands.push(commands::song_info_context_menu());
+			}
+			"favoritize" => {
+				commands.push(commands::favoritize_context_menu());
+			}
+			"translate" => {
+				commands.push(commands::translate_context_menu());
+			}
+			"webp" => {
+				commands.push(commands::webp_context_menu());
+			}
+			"jxl" => {
+				commands.push(commands::jxl_context_menu());
+			}
+			name => {
+				eprintln!("Warning! Command \"", name, "\" doesn't exist.");
+			}
+		}
+	}
+
+	commands
 }
 
 #[tokio::main]
@@ -62,36 +89,10 @@ async fn main() -> Result<()> {
 
 	let config = Config::new();
 	println!(config:#?);
+
 	let intents = serenity::GatewayIntents::non_privileged();
 
-	let commands = get_commands();
-
-	// Add the context menu commands if they're in the config.
-	// for command_name in &config.context_menu_commands {
-	// 	match command_name.as_str() {
-	// 		"bible" => {
-	// 			commands.push(commands::bible_context_menu());
-	// 		}
-	// 		"song_info" => {
-	// 			commands.push(commands::song_info_context_menu());
-	// 		}
-	// 		"favoritize" => {
-	// 			commands.push(commands::favoritize_context_menu());
-	// 		}
-	// 		"translate" => {
-	// 			// commands.push(commands::translate_context_menu());
-	// 		}
-	// 		"webp" => {
-	// 			commands.push(commands::webp_context_menu());
-	// 		}
-	// 		"jxl" => {
-	// 			commands.push(commands::jxl_context_menu());
-	// 		}
-	// 		name => {
-	// 			eprintln!("Warning! Command \"", name, "\" doesn't exist.");
-	// 		}
-	// 	}
-	// }
+	let commands = get_commands(&config);
 
 	let options: FrameworkOptions<BotData, Error> = poise::FrameworkOptions {
 		owners: config.owner_ids.clone(),
@@ -115,7 +116,7 @@ async fn main() -> Result<()> {
 	client.http.set_application_id(config.application_id);
 
 	let commands =
-		create_application_commands::<BotData, Error>(&get_commands());
+		create_application_commands::<BotData, Error>(&get_commands(&config));
 	if let Err(err) = client.http.create_global_commands(&commands).await {
 		eprintln!("Error creating global commands: ", err);
 	}
