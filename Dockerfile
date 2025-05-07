@@ -18,7 +18,7 @@ RUN cargo chef cook --release --target x86_64-unknown-linux-musl --recipe-path r
 COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin ${APP_NAME}
 
-FROM alpine AS final
+FROM alpine:3.21 AS final
 ARG APP_NAME
 ENV APP_NAME=${APP_NAME}
 
