@@ -43,7 +43,6 @@ color-thief = "0.2"
 # image = "0.24.7"
 # cudarc = { version = "=0.12.1", features = ["cuda-version-from-build-system"] }
 bon = "3.5"
-mimalloc = "0.1"
 favicon-picker = "1.1.0"
 resvg = "0.45.1"
 strum_macros = "0.27"
@@ -53,3 +52,10 @@ tracing-subscriber = "0.3.19"
 fuzzy-matcher = "0.3.7"
 num-format = { version = "0.4.4", features = ["serde"] }
 secrecy = { version = "0.10.3", features = ["serde"] }
+cfg-if = "1.0.0"
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator = "0.6.0"
+
+[target.'cfg(target_env = "msvc")'.dependencies]
+mimalloc = { version = "0.1", features = ["secure"] }

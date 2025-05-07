@@ -1,12 +1,9 @@
-#[global_allocator]
-static ALLOC: MiMalloc = MiMalloc;
-
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::Result;
+use cfg_if::cfg_if;
 use config::{BotData, Config, Error};
 use inline_format::{eprintln, println};
-use mimalloc::MiMalloc;
 use poise::{
 	samples::create_application_commands,
 	serenity_prelude::{
@@ -16,8 +13,19 @@ use poise::{
 };
 use secrecy::ExposeSecret;
 
+cfg_if! {
+	if #[cfg(not(target_env = "msvc"))] {
+		use tikv_jemallocator::Jemalloc;
+		#[global_allocator]
+		static ALLOC: Jemalloc = Jemalloc;
+	} else {
+		use mimalloc::MiMalloc;
+		#[global_allocator]
+		static ALLOC: MiMalloc = MiMalloc;
+	}
+}
+
 pub mod commands;
-// pub mod component_count;
 pub mod config;
 pub mod helpers;
 pub mod media;
