@@ -59,6 +59,7 @@ pub fn get_commands<'a>(config: &Config) -> Vec<Command<BotData, Error>> {
 		commands::song_info(),
 		commands::source(),
 		commands::command_buttons(),
+		commands::memory(),
 	];
 
 	// Add the context menu commands if they're in the config.

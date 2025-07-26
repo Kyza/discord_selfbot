@@ -302,7 +302,8 @@ pub async fn build_song_info_message<'a>(
 				})
 				.collect::<Vec<_>>()
 				// 5 is the limit of buttons per row.
-				.chunks(5)
+				// 4 is used because Discord starts wrapping them.
+				.chunks(4)
 				.map(|buttons| {
 					CreateComponent::ActionRow(CreateActionRow::Buttons(
 						buttons.to_vec().into(),

@@ -29,4 +29,5 @@ crunch![
 	song_info,
 	source,
 	command_buttons,
+	memory,
 ];
